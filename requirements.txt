@@ -1,0 +1,5 @@
+faster-whisper>=1.2.0,<2
+imageio-ffmpeg>=0.6.0,<0.7
+# PyAV 17+ entfernt metadata_errors; faster-whisper 1.2.1 benötigt diese API.
+av>=11,<17
+

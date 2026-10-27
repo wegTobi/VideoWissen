@@ -1,0 +1,38 @@
+name: Windows tests and build
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'video_assistant/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'app.py'
+      - 'requirements*.txt'
+      - '.github/workflows/windows.yml'
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - run: python -m pip install -r requirements-build.txt
+      - run: python -m unittest discover -s tests -v
+      - run: ./tools/build_windows.ps1 -Python python
+        shell: pwsh
+      - name: Frozen smoke test
+        shell: pwsh
+        run: |
+          $env:VIDEOWISSEN_DATA_DIR = Join-Path $PWD '.test-output/frozen-data'
+          $p = Start-Process .build/dist/VideoWissen/VideoWissen.exe -ArgumentList '--self-test .test-output/frozen.json' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Frozen self-test failed' }
+          Get-Content .test-output/frozen.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VideoWissen-Windows-x64
+          path: .build/dist/VideoWissen/
+          retention-days: 14

@@ -1,0 +1,10 @@
+{
+  "_internal/ffmpeg/avcodec-62.dll": {
+    "sha256": "0ec4094085606a3dd0afe0421a77340dc906c63d1b7a066a6d3ccc423eef8f80",
+    "credential_fingerprints": [
+      "20a439fed4857377e81e593e8b804a888da9ec12edc4931518c020cb929895dd",
+      "d4255b3495405778f90075a9559c191274bdd26f08721b2b00e921df8680d914"
+    ],
+    "reason": "Accidental sk- byte sequences in the unmodified public FFmpeg codec DLL; exact bytes verified against the SHA-256-verified upstream release archive from ffmpeg-lock.json. No locally supplied credentials."
+  }
+}

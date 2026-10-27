@@ -1,0 +1,7 @@
+# Preserve exact bytes so SHA256SUMS also matches GitHub's Download ZIP.
+* -text
+*.exe binary
+*.dll binary
+*.pyd binary
+*.zip binary
+*.onnx binary
