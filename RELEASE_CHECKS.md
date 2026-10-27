@@ -1,5 +1,16 @@
 # Freigabeprüfung: Windows x64
 
+## Aktualisierung: Prompt im ZIP
+
+- Neue Ergebnis-ZIPs enthalten transcript.md, prompt.md und screenshots/*.jpg.
+  Die Prompt-Einstellungen werden auf dem GUI-Thread beim Verarbeitungsstart übernommen.
+  Vorschau und Kopieren bleiben verfügbar; spätere Änderungen verändern bestehende ZIPs nicht.
+- Tests prüfen den genauen UTF-8-Promptinhalt im ZIP, den Ausschluss anderer Dateien
+  und die Übernahme der Einstellungen einschließlich unbekannter Relevanz.
+- 21 Tests ausgeführt: 19 erfolgreich, zwei optionale Langvideo-/Modelltests übersprungen.
+  Zusätzlich neu gebaute EXE mit echter Sprache und lokalem tiny-Modell erfolgreich
+  geprüft: ZIP enthält Transkript, prompt.md und drei JPEGs; Sprachprobe ebenfalls erfolgreich.
+
 ## Aktualisierung: Relevanz ohne Einschätzung
 
 - „Kann ich nicht einschätzen“ deaktiviert den Relevanzregler und erzeugt einen

@@ -56,19 +56,21 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(Cancelled):
             run_ffmpeg([], event)
 
-    def test_zip_contains_only_transcript_and_screenshots(self):
+    def test_zip_contains_transcript_prompt_and_screenshots(self):
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             output = Path(temp) / "Projekt Ä"
             (output / "screenshots").mkdir(parents=True)
             (output / "screenshots" / "001.jpg").write_bytes(b"test")
             (output / "transcript.md").write_text("# Gespräch\\nHallo", encoding="utf-8")
+            (output / "prompt.md").write_bytes("# Arbeitsauftrag\nFür Studierende".encode("utf-8"))
             (output / "project.json").write_text("{}")
             (output / "ai_instructions.md").write_text("Nicht exportieren")
             (output / "screenshots" / "private.txt").write_text("Nicht exportieren")
             target = Path(temp) / "export.zip"
             archive = export_zip(output, target, threading.Event())
             with zipfile.ZipFile(archive) as zipped:
-                self.assertEqual(set(zipped.namelist()), {"transcript.md", "screenshots/001.jpg"})
+                self.assertEqual(set(zipped.namelist()), {"transcript.md", "prompt.md", "screenshots/001.jpg"})
+                self.assertEqual(zipped.read("prompt.md").decode("utf-8"), "# Arbeitsauftrag\nFür Studierende")
                 self.assertEqual(zipped.read("screenshots/001.jpg"), b"test")
                 self.assertIn("Gespräch", zipped.read("transcript.md").decode("utf-8"))
             with self.assertRaises(ProcessingError):
@@ -106,7 +108,7 @@ class FFmpegIntegrationTests(unittest.TestCase):
         FakeModel.calls = []
         destination = self.root / "complete"
         output = process_video(info, destination, Settings(rate=2, chunk_seconds=30),
-                               threading.Event(), lambda *_: None, FakeModel)
+                               threading.Event(), lambda *_: None, FakeModel, prompt_text="# Mein Prompt\nBegriffe erklären.")
         self.assertEqual(output.suffix, ".zip")
         self.assertEqual(list(destination.iterdir()), [output])
         self.assertEqual(len(FakeModel.calls), 3)
@@ -115,7 +117,8 @@ class FFmpegIntegrationTests(unittest.TestCase):
         self.assertLessEqual(max(FakeModel.calls), 34.1)
         with zipfile.ZipFile(output) as archive:
             self.assertIsNone(archive.testzip())
-            self.assertEqual(len(archive.namelist()), 4)
+            self.assertEqual(len(archive.namelist()), 5)
+            self.assertEqual(archive.read("prompt.md").decode("utf-8"), "# Mein Prompt\nBegriffe erklären.")
             text = archive.read("transcript.md").decode("utf-8")
             self.assertEqual(text.count("Schritt"), 64)
             self.assertIn("## 00:00:00 – 00:00:29", text)

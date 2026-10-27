@@ -61,7 +61,7 @@ Die angezeigte Dauer ist eine grobe Schätzung anhand von Videolänge, Modell un
 
 ### 3. Zielordner wählen und starten
 
-Wähle, wo das Ergebnis gespeichert werden soll, und klicke auf **Aufbereitung starten**. Längere Aufnahmen können je nach Rechner und Modell viel Zeit benötigen. Die App zeigt den Fortschritt an.
+Wähle, wo das Ergebnis gespeichert werden soll, und lege vor dem Start unter **KI-Auswertung anpassen** deine Wünsche für die spätere Auswertung fest. Klicke dann auf **Aufbereitung starten**. Längere Aufnahmen können je nach Rechner und Modell viel Zeit benötigen. Die App zeigt den Fortschritt an.
 
 Wenn alles fertig ist, findest du über **ZIP anzeigen** die Ergebnisdatei im Windows-Explorer. Standardmäßig wird unter **Dokumente/VideoWissen** gespeichert.
 
@@ -80,13 +80,14 @@ Wenn alles fertig ist, findest du über **ZIP anzeigen** die Ergebnisdatei im Wi
 
 > Erstelle ein übersichtliches Besprechungsprotokoll mit Themen, Entscheidungen, offenen Fragen und nächsten Schritten. Nenne Verantwortliche und Termine nur, wenn sie aus dem Material eindeutig hervorgehen. Nutze die Screenshots, wenn sie für das Verständnis relevant sind, und kennzeichne Unsicherheiten.
 
-Der Prompt wird **nur zum Kopieren angezeigt**. Er wird weder als Datei gespeichert noch in die ZIP aufgenommen.
+Der Prompt wird zusätzlich als **prompt.md in der Ergebnis-ZIP** gespeichert. Er enthält die Einstellungen zum Zeitpunkt des Verarbeitungsstarts. Du kannst ihn später aus der ZIP öffnen und kopieren, auch ohne die App zu starten. Die Vorschau und der Kopieren-Button in der App bleiben verfügbar; spätere Änderungen dort verändern eine bereits erzeugte ZIP nicht.
 
 ## Was steckt in der Ergebnis-ZIP?
 
 ```text
 Aufnahme_20261027_120000.zip
 ├── transcript.md
+├── prompt.md
 └── screenshots/
     ├── 000001_00-00-00.000.jpg
     ├── 000002_00-00-12.000.jpg
@@ -94,9 +95,10 @@ Aufnahme_20261027_120000.zip
 ```
 
 - **transcript.md:** Das Gesprochene als Text mit Zeitstempeln im Format **HH:MM:SS**, ohne Millisekunden. Du kannst die Datei auch mit einem normalen Texteditor öffnen.
+- **prompt.md:** Dein Arbeitsauftrag an die KI, passend zu den beim Start gewählten Einstellungen. Füge diesen Text als Auftrag in der KI ein; das Hochladen der Datei allein startet nicht unbedingt die gewünschte Auswertung.
 - **screenshots/:** Bilder aus dem Video in zeitlicher Reihenfolge. Die Dateinamen enthalten jeweils die Position im Video.
 
-Die ZIP enthält ausschließlich das Transkript und die Bilder. Das Originalvideo und der Prompt werden nicht mit eingepackt. Bewahre die ursprüngliche Aufnahme auf, wenn du später Stellen nachprüfen möchtest.
+Die ZIP enthält ausschließlich das Transkript, den Prompt und die Bilder. Das Originalvideo wird nicht mit eingepackt. Bewahre die ursprüngliche Aufnahme auf, wenn du später Stellen nachprüfen möchtest.
 
 ## Bleiben meine Aufnahmen privat?
 

@@ -52,8 +52,9 @@ def run_self_test(report_path: str, model_path: str | None = None, audio_path: s
                                        language="en", rate=20), threading.Event(), lambda *_: None)
                 with zipfile.ZipFile(output) as archive:
                     names = archive.namelist()
-                    assert "transcript.md" in names
-                    assert all(name == "transcript.md" or (name.startswith("screenshots/") and name.endswith(".jpg"))
+                    assert "transcript.md" in names and "prompt.md" in names
+                    assert "# Arbeitsauftrag" in archive.read("prompt.md").decode("utf-8")
+                    assert all(name in ("transcript.md", "prompt.md") or (name.startswith("screenshots/") and name.endswith(".jpg"))
                                for name in names)
                     assert archive.testzip() is None
                     transcript = archive.read("transcript.md").decode("utf-8")

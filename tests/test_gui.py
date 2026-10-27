@@ -9,6 +9,29 @@ from video_assistant.prompting import PURPOSES, SCREENSHOT_ROLES
 
 
 class GuiSmokeTest(unittest.TestCase):
+    def test_export_uses_prompt_settings_captured_at_start(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Application(root)
+        try:
+            root.after_cancel(app.scan_after)
+            app.info = VideoInfo("example.mp4", 120, 123, True)
+            app.relevance_unknown.set(True)
+            app.notes.insert("1.0", "Für die Prüfung aufbereiten")
+            expected = app._prompt_text()
+            with patch.object(app, "_model_path", return_value="test-model"), \
+                 patch.object(app, "_background") as background, \
+                 patch("video_assistant.gui.process_video") as process:
+                app._start()
+                operation, kind = background.call_args.args
+                self.assertEqual(kind, "done")
+                app.notes.insert("end", " Spätere Änderung")
+                operation()
+                self.assertEqual(process.call_args.kwargs["prompt_text"], expected)
+                self.assertNotIn("Spätere Änderung", process.call_args.kwargs["prompt_text"])
+        finally:
+            root.destroy()
+
     def test_unknown_relevance_disables_slider_and_omits_percentage_from_prompt(self):
         root = tk.Tk()
         root.withdraw()

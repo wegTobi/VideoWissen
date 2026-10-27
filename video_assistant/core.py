@@ -287,18 +287,19 @@ def write_transcript(output: Path, result: dict):
 
 
 def export_zip(output: Path, target: Path, cancel: threading.Event) -> Path:
-    """Exportiert ausschließlich das Markdown-Transkript und die JPEG-Screenshots."""
+    """Exportiert Transkript, den eingestellten KI-Prompt und JPEG-Screenshots."""
     if target.exists():
         raise ProcessingError(f"ZIP existiert bereits: {target}")
     transcript = output / "transcript.md"
+    prompt = output / "prompt.md"
     images = sorted((output / "screenshots").glob("*.jpg"))
-    if not transcript.is_file() or not images:
-        raise ProcessingError("Transkript oder Screenshots fehlen; kein ZIP-Export möglich.")
+    if not transcript.is_file() or not prompt.is_file() or not images:
+        raise ProcessingError("Transkript, Prompt oder Screenshots fehlen; kein ZIP-Export möglich.")
     temporary = target.with_suffix(".zip.part")
     try:
         check_cancel(cancel)
         with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as archive:
-            for path in [transcript, *images]:
+            for path in [transcript, prompt, *images]:
                 check_cancel(cancel)
                 archive.write(path, path.relative_to(output))
         check_cancel(cancel)
@@ -311,7 +312,9 @@ def export_zip(output: Path, target: Path, cancel: threading.Event) -> Path:
 
 
 def process_video(info: VideoInfo, destination: Path, settings: Settings, cancel: threading.Event,
-                  progress: Callable, model_factory=None) -> Path:
+                  progress: Callable, model_factory=None, *, prompt_text: str | None = None) -> Path:
+    from .prompting import PromptPreferences, build_prompt
+    prompt_text = build_prompt(PromptPreferences()) if prompt_text is None else prompt_text
     settings.validate()
     if not info.has_audio:
         raise ProcessingError("Die Datei enthält keine Tonspur. Bitte die Aufnahme oder Audiospuren prüfen.")
@@ -331,6 +334,7 @@ def process_video(info: VideoInfo, destination: Path, settings: Settings, cancel
         extract_screenshots(info, output, settings, cancel, progress)
         transcribe(info, output, settings, cancel, progress, model_factory)
         check_cancel(cancel)
+        (output / "prompt.md").write_bytes(prompt_text.encode("utf-8"))
         progress(97, "ZIP-Datei erstellen …")
         export_zip(output, target, cancel)
     progress(100, f"Fertig: {target}")

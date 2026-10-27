@@ -1,4 +1,4 @@
-"""Regelbasierter Prompt nur für Vorschau und Zwischenablage, ohne Datei-Export."""
+"""Regelbasierter Prompt für Vorschau, Zwischenablage und ZIP-Export."""
 from dataclasses import dataclass
 
 PURPOSES = ("Schritt-für-Schritt-Anleitung", "Kompakte Zusammenfassung",

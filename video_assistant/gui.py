@@ -102,7 +102,7 @@ class Application:
         self.canvas.bind("<Configure>", lambda event: self.canvas.itemconfigure(content, width=event.width))
         self.root.bind_all("<MouseWheel>", self._scroll)
         ttk.Label(body, text="VideoWissen", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(body, text="Transkript und Screenshots – zusammen in einer ZIP-Datei für deine KI.",
+        ttk.Label(body, text="Transkript, Screenshots und Prompt – zusammen in einer ZIP-Datei für deine KI.",
                   style="Subtitle.TLabel").pack(anchor="w", pady=(4, 18))
 
         source = self._section(body, "1 · Video")
@@ -205,7 +205,7 @@ class Application:
         self.notes.bind("<<Modified>>", self._notes_changed)
         self._button(prompt, "Prompt ansehen und kopieren …", self._show_preview).grid(
             row=6, column=0, columnspan=2, sticky="w", pady=(6, 0))
-        ttk.Label(prompt, text="Nur zum Kopieren. Der Prompt wird nicht als Datei gespeichert und ist nicht in der ZIP.",
+        ttk.Label(prompt, text="Der Prompt wird beim Verarbeitungsstart übernommen und als prompt.md in die ZIP aufgenommen.",
                   style="Subtitle.TLabel", wraplength=790).grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
         footer = ttk.Frame(self.root, padding=(24, 12))
@@ -350,7 +350,7 @@ class Application:
             self.preview = tk.Toplevel(self.root)
             self.preview.title("VideoWissen · Prompt zum Kopieren")
             self.preview.geometry("860x650")
-            ttk.Label(self.preview, text="Kopiere diesen Prompt in deine KI. Er wird nicht mit exportiert.",
+            ttk.Label(self.preview, text="Kopiere diesen Prompt in deine KI. Beim Verarbeitungsstart wird er auch für die ZIP übernommen.",
                       padding=12).pack(anchor="w")
             frame = ttk.Frame(self.preview)
             frame.pack(fill="both", expand=True, padx=12)
@@ -480,6 +480,7 @@ class Application:
             if not self.destination.get().strip():
                 raise ProcessingError("Bitte einen Ausgabeordner wählen.")
             destination = Path(self.destination.get()).expanduser().resolve()
+            prompt_text = self._prompt_text()
         except (ValueError, ProcessingError) as exc:
             messagebox.showerror("Einstellungen prüfen", str(exc))
             return
@@ -487,7 +488,8 @@ class Application:
         self.percent.set(0)
         self._log("Verarbeitung gestartet. Das Modell ist bereits lokal vorhanden.")
         info = self.info
-        self._background(lambda: process_video(info, destination, settings, self.cancel, self._progress), "done")
+        self._background(lambda: process_video(info, destination, settings, self.cancel, self._progress,
+                                               prompt_text=prompt_text), "done")
 
     def _progress(self, value, message):
         self.events.put(("progress", (value, message)))
@@ -553,7 +555,7 @@ class Application:
                 self._estimate()
             elif kind == "done":
                 self.output = value
-                self.status.set("Fertig. Die ZIP-Datei enthält das Transkript und alle Screenshots.")
+                self.status.set("Fertig. Die ZIP-Datei enthält Transkript, Screenshots und prompt.md.")
                 self._log(f"Gespeichert: {value}")
                 if not self.close_pending:
                     messagebox.showinfo("Aufbereitung abgeschlossen", f"ZIP-Datei:\n{value}")

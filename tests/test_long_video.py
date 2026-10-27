@@ -40,7 +40,7 @@ class LongVideoTests(unittest.TestCase):
             self.assertAlmostEqual(info.duration, 7200, delta=.1)
             output = process_video(info, folder, Settings(rate=2), threading.Event(), lambda *_: None, SilentModel)
             with zipfile.ZipFile(output) as archive:
-                self.assertEqual(len(archive.namelist()), 241)
+                self.assertEqual(len(archive.namelist()), 242)
                 self.assertIn("Keine Sprache erkannt.", archive.read("transcript.md").decode("utf-8"))
             self.assertEqual(len(calls), 24)
             self.assertFalse(list(folder.glob(".videowissen-*")))
