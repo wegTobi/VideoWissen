@@ -133,6 +133,8 @@ class Application:
         model_row.columnconfigure(0, weight=1)
         self.model_combo = self._combo(model_row, self.model, tuple(MODEL_REPOS))
         self.model_combo.grid(row=0, column=0, sticky="ew")
+        ttk.Label(model_row, text="Größere Modelle können genauer transkribieren, benötigen aber meist mehr Zeit.",
+                  style="Subtitle.TLabel", wraplength=450).grid(row=1, column=0, sticky="w", pady=(4, 0))
         download_row = ttk.Frame(options)
         download_row.grid(row=3, column=1, sticky="ew", padx=(15, 0), pady=(2, 8))
         ttk.Label(download_row, textvariable=self.model_status, wraplength=430,
