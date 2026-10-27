@@ -372,7 +372,11 @@ class Application:
         self.cancel = threading.Event()
         self.operation = kind
         self._set_busy(True)
-        if kind in ("download", "scan", "benchmark", "probe"):
+        if kind == "download":
+            self.progressbar.stop()
+            self.progressbar.configure(mode="determinate")
+            self.percent.set(0)
+        elif kind in ("scan", "benchmark", "probe"):
             self.progressbar.configure(mode="indeterminate")
             self.progressbar.start(15)
 
@@ -489,8 +493,10 @@ class Application:
             except queue.Empty:
                 break
             if kind == "progress":
-                if self.operation == "done":
+                if self.operation in ("done", "download"):
                     self.percent.set(value[0])
+                if self.operation == "download" and not self.cancel.is_set():
+                    self.model_status.set(value[1])
                 if not self.cancel.is_set():
                     self.status.set(value[1])
                 if value[0] == 2:
@@ -505,7 +511,8 @@ class Application:
                 name, path = value
                 self.available_models[name] = path
                 self._refresh_model_labels()
-                self.status.set(f"{name} ist heruntergeladen und lokal verfügbar.")
+                self.percent.set(100)
+                self.status.set(f"{name} ist heruntergeladen und lokal verfügbar · 100 %")
                 self._log(f"Modell gespeichert: {path}")
             elif kind == "benchmark":
                 key, ratio = value
@@ -532,7 +539,7 @@ class Application:
             elif kind == "idle":
                 self.progressbar.stop()
                 self.progressbar.configure(mode="determinate")
-                if self.operation != "done":
+                if self.operation not in ("done", "download"):
                     self.percent.set(0)
                 self.operation = None
                 self._set_busy(False)

@@ -2,6 +2,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from video_assistant.core import Cancelled, ProcessingError
@@ -36,25 +37,68 @@ class ModelTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temporary:
             folder = Path(temporary)
 
-            def download(repo, **kwargs):
-                self.assertIn("faster-whisper-base", repo)
-                with kwargs["tqdm_class"](total=1) as bar:
-                    bar.update(1)
-                populate(Path(kwargs["local_dir"]))
+            files = [SimpleNamespace(rfilename=name, size=size) for name, size in (
+                ("model.bin", 900), ("config.json", 20), ("tokenizer.json", 60), ("vocabulary.txt", 20))]
+            metadata = SimpleNamespace(sha="fixed-revision", siblings=files)
+            updates = []
 
-            with patch("huggingface_hub.snapshot_download", side_effect=download) as network, patch("sys.stderr", None):
-                path = download_model("base", threading.Event(), lambda *_: None, folder)
+            def download(repo, filename, **kwargs):
+                self.assertIn("faster-whisper-base", repo)
+                self.assertEqual(kwargs["revision"], "fixed-revision")
+                size = next(file.size for file in files if file.rfilename == filename)
+                if filename == "model.bin":
+                    # Resume + a retry must not move backwards; Xet's compressed
+                    # transfer counter must not be counted as file bytes again.
+                    with kwargs["tqdm_class"](total=size, initial=100) as bar:
+                        bar.update(200)
+                        bar.update_transfer(999999)
+                    with kwargs["tqdm_class"](total=size, initial=100) as bar:
+                        bar.update(350)
+                        bar.update(450)
+                # Other files simulate cache hits with no progress callbacks.
+                (Path(kwargs["local_dir"]) / filename).write_bytes(b"x" * size)
+
+            with patch("huggingface_hub.HfApi.model_info", return_value=metadata), \
+                 patch("huggingface_hub.hf_hub_download", side_effect=download) as network, patch("sys.stderr", None):
+                path = download_model("base", threading.Event(), lambda *args: updates.append(args), folder)
                 self.assertTrue(model_complete(Path(path)))
-                self.assertEqual(network.call_count, 1)
-            with patch("huggingface_hub.snapshot_download", side_effect=OSError("Netzwerk")):
+                self.assertEqual(network.call_count, 4)
+            values = [value for value, _ in updates]
+            self.assertEqual(values, sorted(values))
+            self.assertIn(45, values)  # 450/1000 bytes, not 1/4 files.
+            self.assertEqual(values[-1], 100)
+            self.assertNotIn(100, values[:-1])
+            self.assertTrue(all("%" in message for _, message in updates))
+            with patch("huggingface_hub.HfApi.model_info", side_effect=OSError("Netzwerk")):
                 with self.assertRaisesRegex(ProcessingError, "Internetverbindung"):
                     download_model("small", threading.Event(), lambda *_: None, folder)
             cancel = threading.Event()
             cancel.set()
-            with patch("huggingface_hub.snapshot_download") as network:
+            with patch("huggingface_hub.HfApi.model_info") as network:
                 with self.assertRaises(Cancelled):
                     download_model("small", cancel, lambda *_: None, folder)
                 network.assert_not_called()
+
+    def test_download_progress_cancellation_and_incomplete_model(self):
+        files = [SimpleNamespace(rfilename="model.bin", size=100)]
+        metadata = SimpleNamespace(sha="fixed-revision", siblings=files)
+        cancel = threading.Event()
+
+        def cancel_download(repo, filename, **kwargs):
+            with kwargs["tqdm_class"](total=100) as bar:
+                cancel.set()
+                bar.update(20)
+
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temporary, \
+             patch("huggingface_hub.HfApi.model_info", return_value=metadata):
+            with patch("huggingface_hub.hf_hub_download", side_effect=cancel_download):
+                with self.assertRaises(Cancelled):
+                    download_model("tiny", cancel, lambda *_: None, Path(temporary))
+            updates = []
+            with patch("huggingface_hub.hf_hub_download"):
+                with self.assertRaisesRegex(ProcessingError, "unvollständig"):
+                    download_model("tiny", threading.Event(), lambda value, _: updates.append(value), Path(temporary))
+            self.assertNotIn(100, updates)
 
     def test_estimate_respects_video_model_and_hardware(self):
         fast = HardwareInfo("Fast", 8, 32, 3600, "NVIDIA", 12, True)

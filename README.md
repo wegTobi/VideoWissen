@@ -51,7 +51,7 @@ Für den ersten Versuch kannst du mit diesen Einstellungen beginnen:
 | Whisper-Modell | **small** als Ausgangspunkt. Ein Modell ist das Sprachpaket, mit dem die App Gesprochenes erkennt. |
 | Screenshots pro Minute | **5** – ungefähr alle zwölf Sekunden ein Bild. |
 
-Beim Modell steht, ob es bereits vorhanden ist oder noch heruntergeladen werden muss. Klicke bei Bedarf auf **Modell herunterladen** und warte, bis der Download fertig ist. Dafür brauchst du Internet. Danach kannst du dieses Modell auch ohne Internet verwenden. Beim Start der Verarbeitung wird kein Modell automatisch heruntergeladen.
+Beim Modell steht, ob es bereits vorhanden ist oder noch heruntergeladen werden muss. Klicke bei Bedarf auf **Modell herunterladen**. Während des Downloads zeigen ein Fortschrittsbalken und ein **Prozentsatz von 0 bis 100 %**, wie viel der benötigten Modelldaten bereits verfügbar ist. 100 % erscheint nach erfolgreicher Prüfung der benötigten Dateien. Dafür brauchst du Internet. Danach kannst du dieses Modell auch ohne Internet verwenden. Beim Start der Verarbeitung wird kein Modell automatisch heruntergeladen.
 
 Größere Modelle brauchen mehr Arbeitsspeicher und können auf der CPU deutlich länger rechnen; sie können bei schwierigen Aufnahmen bessere Ergebnisse liefern. Du kannst später verschiedene Modelle ausprobieren.
 

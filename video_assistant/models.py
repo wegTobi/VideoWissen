@@ -44,8 +44,24 @@ def download_model(name: str, cancel: threading.Event, progress, root: Path = MO
     if name not in MODEL_REPOS:
         raise ProcessingError("Für eigene Modelle bitte einen vorhandenen Modellordner auswählen.")
     check_cancel(cancel)
-    from huggingface_hub import snapshot_download
+    from huggingface_hub import HfApi, hf_hub_download
     from tqdm.auto import tqdm
+
+    total_bytes = completed_bytes = current_bytes = 0
+    last_percent = -1
+    progress_lock = threading.Lock()
+
+    def report_bytes(count):
+        nonlocal current_bytes, last_percent
+        check_cancel(cancel)
+        with progress_lock:
+            # Retries may restart a counter; keep the overall display monotonic.
+            current_bytes = max(current_bytes, count)
+            if total_bytes:
+                percent = min(99, int(100 * (completed_bytes + current_bytes) / total_bytes))
+                if percent != last_percent:
+                    last_percent = percent
+                    progress(percent, f"{name} herunterladen · {percent} %")
 
     class DownloadProgress(tqdm):
         def __init__(self, *args, **kwargs):
@@ -53,23 +69,47 @@ def download_model(name: str, cancel: threading.Event, progress, root: Path = MO
             # Windowed EXEs have no stderr. tqdm still writes once when closing.
             kwargs["file"] = io.StringIO()
             super().__init__(*args, **kwargs)
+            report_bytes(self.n)
 
         def display(self, *args, **kwargs):
-            # Keine Konsole notwendig (pythonw); Indikator statt unzuverlässiger Byte-Prozentzahl.
+            # No console in the windowed EXE; send byte progress to the GUI instead.
             return None
 
         def update(self, n=1):
             check_cancel(cancel)
-            return super().update(n)
+            result = super().update(n)
+            report_bytes(self.n)
+            return result
+
+        def update_transfer(self, n):
+            # Xet also reports compressed network bytes. Count reconstructed file
+            # bytes only, so those bytes aren't counted twice.
+            check_cancel(cancel)
+
+        def set_transfer_postfix_str(self, *args, **kwargs):
+            pass
 
     target = root / name
     target.mkdir(parents=True, exist_ok=True)
-    progress(0, f"{name} herunterladen ({MODEL_SIZES[name]}) …")
+    progress(0, f"{name} herunterladen · 0 % · Dateigrößen ermitteln …")
     try:
-        snapshot_download(MODEL_REPOS[name], local_dir=target,
-                          allow_patterns=["config.json", "preprocessor_config.json", "model.bin",
-                                          "tokenizer.json", "vocabulary.*"],
-                          tqdm_class=DownloadProgress, max_workers=2)
+        info = HfApi().model_info(MODEL_REPOS[name], files_metadata=True)
+        check_cancel(cancel)
+        allowed = {"config.json", "preprocessor_config.json", "model.bin",
+                   "tokenizer.json", "vocabulary.json", "vocabulary.txt"}
+        files = [file for file in info.siblings if file.rfilename in allowed]
+        if not files or any(not file.size or file.size < 0 for file in files):
+            raise ProcessingError("Dateigrößen des Modells konnten nicht ermittelt werden. Bitte erneut versuchen.")
+        total_bytes = sum(file.size for file in files)
+        for file in files:
+            check_cancel(cancel)
+            current_bytes = 0
+            hf_hub_download(MODEL_REPOS[name], file.rfilename, revision=info.sha,
+                            local_dir=target, tqdm_class=DownloadProgress)
+            # Cache hits need no tqdm callback, but still count as available bytes.
+            completed_bytes += file.size
+            current_bytes = 0
+            report_bytes(0)
         check_cancel(cancel)
         if not model_complete(target):
             raise ProcessingError("Modelldownload unvollständig. Bitte erneut herunterladen.")
@@ -79,5 +119,5 @@ def download_model(name: str, cancel: threading.Event, progress, root: Path = MO
         if isinstance(exc, ProcessingError):
             raise
         raise ProcessingError(f"Download für {name} fehlgeschlagen. Internetverbindung und freien Speicher prüfen.\n{exc}") from exc
-    progress(100, f"{name} ist lokal verfügbar.")
+    progress(100, f"{name} herunterladen · 100 % · lokal verfügbar.")
     return str(target.resolve())

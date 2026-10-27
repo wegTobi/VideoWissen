@@ -28,8 +28,12 @@ def run_self_test(report_path: str, model_path: str | None = None, audio_path: s
                                   "ctranslate2": ctranslate2.__version__, "onnxruntime": onnxruntime.__version__}
         report["ffmpeg"] = Path(ffmpeg_executable()).name
         if download_name:
-            model_path = download_model(download_name, threading.Event(), lambda *_: None)
+            percentages = []
+            model_path = download_model(download_name, threading.Event(),
+                                        lambda value, _: percentages.append(value))
             report["download_model"] = download_name
+            report["download_percentages"] = percentages
+            assert percentages == sorted(percentages) and percentages[-1] == 100
         report["models_detected"] = sorted(discover_models())
         report["prompt_ok"] = "transcript.md" in build_prompt(PromptPreferences())
         with tempfile.TemporaryDirectory(prefix="selftest-", dir=target.parent) as temporary:

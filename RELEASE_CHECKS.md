@@ -1,5 +1,18 @@
 # Freigabeprüfung: Windows x64
 
+## Aktualisierung: Download-Fortschritt
+
+- Die Modellanzeige und der Fortschrittsbalken zeigen jetzt einen Prozentsatz anhand
+  der tatsächlichen Modelldateigrößen. 100 % erscheint erst nach Vollständigkeitsprüfung.
+- 17 Tests ausgeführt: 15 erfolgreich, zwei optionale Langvideo-/Modelltests übersprungen.
+  Neue Tests prüfen Byte-Gewichtung, fortgesetzte Downloads, Cache-Treffer,
+  Xet-Zähler ohne doppelte Anrechnung, Abbruch und die GUI-Prozentanzeige.
+- Windows-EXE neu gebaut. Echter Erstdownload von tiny mit Zwischenständen
+  13, 26, 40, 53, 67, 80, 93, 96, 99 und 100 % erfolgreich.
+  Anschließende Spracherkennung und ZIP mit Transkript und drei JPEGs erfolgreich.
+
+## Ursprüngliche Freigabeprüfung
+
 Stand: 27.10.2026. Öffentliche Vorlage ohne private Entwicklungsdateien.
 
 - Build mit signierter offizieller CPython-3.13.17-Installation, PyInstaller 6.22.3
