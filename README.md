@@ -57,7 +57,7 @@ Größere Modelle brauchen mehr Arbeitsspeicher und können auf der CPU deutlich
 
 Mit dem Screenshot-Regler wählst du **1 bis 60 Bilder pro Minute**. Die App zeigt vorab, wie viele Bilder ungefähr entstehen. Häufig wechselnde Folien oder schnelle Arbeitsschritte brauchen eher mehr Bilder. Bei einer Aufnahme von 90 Minuten ergeben 5 Bilder pro Minute ungefähr **450 Bilder** – für eine spätere KI kann es sinnvoll sein, die Aufnahme in mehrere Teile aufzuteilen.
 
-Die angezeigte Dauer ist eine grobe Schätzung anhand von Videolänge, Modell und Hardware. Mit **Zeitschätzung mit Sprachprobe verfeinern** kannst du eine kurze Probe verarbeiten lassen, bevor du das gesamte Video startest.
+Die angezeigte Dauer ist eine grobe Schätzung anhand von Videolänge, Modell und Hardware. Mit **Zeitschätzung mit Sprachprobe verfeinern** kannst du eine kurze Probe verarbeiten lassen, bevor du das gesamte Video startest. Auch dabei siehst du einen **Fortschrittsbalken mit Prozentanzeige**: erst wird das Modell geladen, dann das Audio vorbereitet und anschließend die Probe transkribiert. Die Prozentzahl beschreibt den Verarbeitungsstand, keine verbleibende Zeit; bei kurzen Proben oder Sprechpausen kann sie springen.
 
 ### 3. Zielordner wählen und starten
 

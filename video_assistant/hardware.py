@@ -126,24 +126,33 @@ def benchmark_sample(info, model_path: str, device: str, cancel: threading.Event
     """30 Sekunden aus der Videomitte; kein Download und keine dauerhafte Audio-Kopie."""
     from faster_whisper import WhisperModel
     check_cancel(cancel)
-    progress(0, "Modell für die 30-s-Probe laden …")
+    progress(0, "Sprachprobe · 0 % · Modell laden …")
     model = WhisperModel(model_path, device=device, compute_type="int8" if device == "cpu" else "float16",
                          local_files_only=True, cpu_threads=cpu_threads())
     temporary_root.mkdir(parents=True, exist_ok=True)
     sample_duration = min(30, info.duration)
+    progress(10, "Sprachprobe · 10 % · Audio vorbereiten …")
     with tempfile.TemporaryDirectory(dir=temporary_root, prefix="probe-") as folder:
         audio = Path(folder) / "sample.wav"
         run_ffmpeg(["-loglevel", "error", "-ss", str(max(0, (info.duration - sample_duration) / 2)),
                     "-i", info.path, "-t", str(sample_duration), "-map", "0:a:0", "-vn",
                     "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", str(audio)], cancel)
-        progress(0, "30-s-Sprachprobe lokal transkribieren …")
+        progress(20, "Sprachprobe · 20 % · lokal transkribieren …")
         started = time.perf_counter()
         segments, metadata = model.transcribe(str(audio), language=language, beam_size=5,
                                               word_timestamps=True, vad_filter=True)
-        for _ in segments:
+        percent = 20
+        for segment in segments:
             check_cancel(cancel)
+            # Content progress, not a wall-clock prediction. Silent/VAD-skipped
+            # portions may produce jumps; reserve 100% for a valid result.
+            next_percent = min(99, max(percent, 20 + int(79 * segment.end / sample_duration)))
+            if next_percent != percent:
+                percent = next_percent
+                progress(percent, f"Sprachprobe · {percent} % · lokal transkribieren …")
         elapsed = time.perf_counter() - started
         check_cancel(cancel)
         if metadata.duration_after_vad < min(5, sample_duration / 2):
             raise ProcessingError("Die Probe enthält zu wenig Sprache. Die Hardware-Schätzung bleibt aktiv.")
+        progress(100, "Sprachprobe · 100 % · Zeitschätzung aktualisieren …")
         return elapsed / sample_duration

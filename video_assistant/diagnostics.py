@@ -19,6 +19,7 @@ def run_self_test(report_path: str, model_path: str | None = None, audio_path: s
         import onnxruntime
         from .core import Settings, ffmpeg_executable, probe_video, process_video, run_ffmpeg
         from .models import discover_models, download_model
+        from .hardware import benchmark_sample
         from .prompting import PromptPreferences, build_prompt
         root = tk.Tk()
         root.withdraw()
@@ -62,6 +63,14 @@ def run_self_test(report_path: str, model_path: str | None = None, audio_path: s
                 assert list((folder / "export").iterdir()) == [output]
                 report["zip_entries"] = names
                 report["inference"] = "passed"
+                if audio_path:
+                    percentages = []
+                    ratio = benchmark_sample(info, str(Path(model_path).resolve()), "cpu", threading.Event(),
+                                             lambda value, _: percentages.append(value), folder, "en")
+                    assert percentages == sorted(percentages) and percentages[-1] == 100
+                    assert ratio > 0
+                    report["benchmark_percentages"] = percentages
+                    report["benchmark"] = "passed"
             else:
                 report["inference"] = "not_tested_no_model"
         report["ok"] = True

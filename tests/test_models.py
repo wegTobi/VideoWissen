@@ -5,8 +5,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from video_assistant.core import Cancelled, ProcessingError
-from video_assistant.hardware import HardwareInfo, estimate_transcription
+from video_assistant.core import Cancelled, ProcessingError, VideoInfo
+from video_assistant.hardware import HardwareInfo, estimate_transcription, benchmark_sample
 from video_assistant.models import discover_models, download_model, model_complete
 
 TEST_ROOT = Path(__file__).resolve().parents[1] / ".test-output"
@@ -20,6 +20,43 @@ def populate(folder):
 
 
 class ModelTests(unittest.TestCase):
+    def test_benchmark_progress_follows_segments_and_only_finishes_on_success(self):
+        info = VideoInfo("example.mp4", 120, 123, True)
+        cancel = threading.Event()
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temporary:
+            folder = Path(temporary)
+            for outcome in ("success", "silence", "cancel", "error"):
+                with self.subTest(outcome=outcome):
+                    cancel.clear()
+                    updates = []
+
+                    def transcribe(*args, **kwargs):
+                        def segments():
+                            yield SimpleNamespace(end=10)
+                            if outcome == "cancel":
+                                cancel.set()
+                            if outcome == "error":
+                                raise RuntimeError("Testfehler")
+                            yield SimpleNamespace(end=20)
+                            yield SimpleNamespace(end=30)
+                        return segments(), SimpleNamespace(duration_after_vad=1 if outcome == "silence" else 30)
+
+                    with patch("faster_whisper.WhisperModel", return_value=SimpleNamespace(transcribe=transcribe)), \
+                         patch("video_assistant.hardware.run_ffmpeg"):
+                        def run():
+                            return benchmark_sample(info, "local-model", "cpu", cancel,
+                                                    lambda value, _: updates.append(value), folder, "de")
+                        if outcome == "success":
+                            self.assertGreaterEqual(run(), 0)
+                            self.assertEqual(updates, [0, 10, 20, 46, 72, 99, 100])
+                        else:
+                            error = {"silence": ProcessingError, "cancel": Cancelled, "error": RuntimeError}[outcome]
+                            with self.assertRaises(error):
+                                run()
+                            self.assertNotIn(100, updates)
+                    self.assertEqual(updates, sorted(updates))
+                    self.assertEqual(list(folder.iterdir()), [])
+
     def test_model_discovery_never_downloads(self):
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temporary:
             folder = Path(temporary)

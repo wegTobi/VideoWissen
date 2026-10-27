@@ -1,5 +1,16 @@
 # Freigabeprüfung: Windows x64
 
+## Aktualisierung: Sprachproben-Fortschritt
+
+- Sprachproben zeigen einen Fortschrittsbalken und Prozentwerte für
+  Modellladen, Audiovorbereitung und verarbeitete Sprachabschnitte. Bei Abbruch,
+  Fehler oder zu wenig Sprache wird kein erfolgreicher 100-%-Abschluss gemeldet.
+- 19 Tests ausgeführt: 17 erfolgreich, zwei optionale Langvideo-/Modelltests übersprungen.
+  Zusätzliche Tests prüfen Zwischenstände, Abbruch, Fehler, zu wenig Sprache,
+  Bereinigung temporärer Dateien und die GUI-Anzeige bis zum Abschluss.
+- Neu gebaute Windows-EXE mit lokalem tiny-Modell und echter Sprachprobe geprüft:
+  Fortschritt 0, 10, 20, 56, 91 und 100 %, erfolgreiche Zeitschätzung und Spracherkennung.
+
 ## Aktualisierung: Download-Fortschritt
 
 - Die Modellanzeige und der Fortschrittsbalken zeigen jetzt einen Prozentsatz anhand

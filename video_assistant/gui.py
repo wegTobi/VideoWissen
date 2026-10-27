@@ -372,11 +372,11 @@ class Application:
         self.cancel = threading.Event()
         self.operation = kind
         self._set_busy(True)
-        if kind == "download":
+        if kind in ("download", "benchmark"):
             self.progressbar.stop()
             self.progressbar.configure(mode="determinate")
             self.percent.set(0)
-        elif kind in ("scan", "benchmark", "probe"):
+        elif kind in ("scan", "probe"):
             self.progressbar.configure(mode="indeterminate")
             self.progressbar.start(15)
 
@@ -493,7 +493,7 @@ class Application:
             except queue.Empty:
                 break
             if kind == "progress":
-                if self.operation in ("done", "download"):
+                if self.operation in ("done", "download", "benchmark"):
                     self.percent.set(value[0])
                 if self.operation == "download" and not self.cancel.is_set():
                     self.model_status.set(value[1])
@@ -518,7 +518,8 @@ class Application:
                 key, ratio = value
                 self.calibrations[key] = ratio
                 self._runtime()
-                self.status.set("Schätzung anhand der lokalen Sprachprobe aktualisiert. Die Probe kann vom übrigen Video abweichen.")
+                self.percent.set(100)
+                self.status.set("Sprachprobe · 100 % · Zeitschätzung aktualisiert. Die Probe kann vom übrigen Video abweichen.")
             elif kind == "probe":
                 self.info = value
                 audio = "Tonspur vorhanden" if value.has_audio else "Keine Tonspur gefunden"
@@ -539,7 +540,7 @@ class Application:
             elif kind == "idle":
                 self.progressbar.stop()
                 self.progressbar.configure(mode="determinate")
-                if self.operation not in ("done", "download"):
+                if self.operation not in ("done", "download", "benchmark"):
                     self.percent.set(0)
                 self.operation = None
                 self._set_busy(False)

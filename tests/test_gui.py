@@ -9,6 +9,28 @@ from video_assistant.prompting import PURPOSES, SCREENSHOT_ROLES
 
 
 class GuiSmokeTest(unittest.TestCase):
+    def test_benchmark_shows_percentage_and_keeps_completed_progress(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Application(root)
+        try:
+            root.after_cancel(app.scan_after)
+            with patch("video_assistant.gui.threading.Thread"):
+                app._background(lambda: None, "benchmark")
+            self.assertEqual(str(app.progressbar["mode"]), "determinate")
+            self.assertEqual(app.percent.get(), 0)
+            app._progress(46, "Sprachprobe · 46 % · lokal transkribieren …")
+            app._poll()
+            self.assertEqual(app.percent.get(), 46)
+            self.assertIn("46 %", app.status.get())
+            app.events.put(("benchmark", (("test",), .2)))
+            app.events.put(("idle", None))
+            app._poll()
+            self.assertEqual(app.percent.get(), 100)
+            self.assertIn("100 %", app.status.get())
+        finally:
+            root.destroy()
+
     def test_download_shows_percentage_and_determinate_bar(self):
         root = tk.Tk()
         root.withdraw()
