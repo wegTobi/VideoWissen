@@ -118,6 +118,8 @@ class FFmpegIntegrationTests(unittest.TestCase):
             self.assertEqual(len(archive.namelist()), 4)
             text = archive.read("transcript.md").decode("utf-8")
             self.assertEqual(text.count("Schritt"), 64)
+            self.assertIn("## 00:00:00 – 00:00:29", text)
+            self.assertNotRegex(text, r"\d{2}:\d{2}:\d{2}\.\d+")
             images = sorted(name for name in archive.namelist() if name.startswith("screenshots/"))
             self.assertEqual(len(images), 3)
             for image in images:

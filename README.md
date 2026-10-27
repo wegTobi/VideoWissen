@@ -93,7 +93,7 @@ Aufnahme_20261027_120000.zip
     └── …
 ```
 
-- **transcript.md:** Das Gesprochene als Text mit Zeitstempeln. Du kannst die Datei auch mit einem normalen Texteditor öffnen.
+- **transcript.md:** Das Gesprochene als Text mit Zeitstempeln im Format **HH:MM:SS**, ohne Millisekunden. Du kannst die Datei auch mit einem normalen Texteditor öffnen.
 - **screenshots/:** Bilder aus dem Video in zeitlicher Reihenfolge. Die Dateinamen enthalten jeweils die Position im Video.
 
 Die ZIP enthält ausschließlich das Transkript und die Bilder. Das Originalvideo und der Prompt werden nicht mit eingepackt. Bewahre die ursprüngliche Aufnahme auf, wenn du später Stellen nachprüfen möchtest.

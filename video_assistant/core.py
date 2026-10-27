@@ -277,7 +277,9 @@ def transcribe(info: VideoInfo, output: Path, settings: Settings, cancel: thread
 def write_transcript(output: Path, result: dict):
     paragraphs = ["# Transkript", "", f"Sprache: {result['language'] or 'unbekannt'}", ""]
     for segment in result["segments"]:
-        paragraphs.extend([f"## {timestamp(segment['start'])} – {timestamp(segment['end'])}",
+        start = timestamp(int(segment["start"])).split(".", 1)[0]
+        end = timestamp(int(segment["end"])).split(".", 1)[0]
+        paragraphs.extend([f"## {start} – {end}",
                            "", segment["text"], ""])
     if not result["segments"]:
         paragraphs.append("Keine Sprache erkannt.")
