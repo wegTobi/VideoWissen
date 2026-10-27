@@ -6,6 +6,12 @@ PURPOSES = ("Schritt-für-Schritt-Anleitung", "Kompakte Zusammenfassung",
 SCREENSHOT_ROLES = ("Wichtige Inhalte und Details", "Nur zeitliche Orientierung",
                     "Details und Orientierung gemischt")
 
+AI_START_MESSAGE = (
+    "Öffne die ZIP, lies zuerst prompt.md und führe den dort beschriebenen Auftrag "
+    "anhand des Transkripts und der Screenshots aus. Sage ausdrücklich, falls du "
+    "Dateien oder Bilder nicht auswerten kannst."
+)
+
 
 @dataclass
 class PromptPreferences:

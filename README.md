@@ -68,9 +68,9 @@ Wenn alles fertig ist, findest du über **ZIP anzeigen** die Ergebnisdatei im Wi
 ## Aus dem Ergebnis Mitschriften und Lernmaterial erstellen
 
 1. Stelle in der App unter **KI-Auswertung anpassen** ein, was entstehen soll: zum Beispiel Lernmaterial, eine Zusammenfassung oder eine Anleitung. Gib an, ob die Bilder wichtige Details zeigen oder eher zur Orientierung dienen, wie viel vom Gespräch relevant war und für wen der Text gedacht ist. Du kannst den relevanten Anteil nicht abschätzen? Aktiviere **Kann ich nicht einschätzen**: Der Regler wird ausgegraut und die KI erhält keine Prozentvorgabe. Sie soll die Relevanz anhand deines Ausgabeziels und des Materials beurteilen. Wenn du das Häkchen wieder entfernst, bleibt dein vorheriger Reglerwert erhalten.
-2. Klicke auf **Prompt ansehen und kopieren …** und im geöffneten Fenster auf **Prompt kopieren**. Ein „Prompt“ ist einfach der Arbeitsauftrag an die spätere KI.
+2. Klicke unten neben **ZIP anzeigen** auf **KI-Startsatz kopieren**. Damit landet ein kurzer Auftrag direkt in deiner Zwischenablage: Die KI soll die ZIP öffnen, zuerst **prompt.md** lesen und den Auftrag ausführen. Ein „Prompt“ ist einfach der Arbeitsauftrag an die spätere KI. Den vollständigen Prompt kannst du weiterhin über **Prompt ansehen und kopieren …** prüfen und kopieren.
 3. Öffne eine KI deiner Wahl, die Dateien und Bilder auswerten kann. Lade die fertige Ergebnis-ZIP hoch, sofern sie ZIP-Dateien unterstützt. Andernfalls entpacke die ZIP und füge das Transkript und die gewünschten Bilder einzeln oder in mehreren Teilen hinzu. Beachte die Datei- und Bildgrenzen des jeweiligen Dienstes.
-4. Füge den kopierten Arbeitsauftrag ins Eingabefeld der KI ein. Ergänze bei Bedarf eigene Wünsche und starte die Auswertung.
+4. Füge den kopierten Startsatz mit **Strg+V** ins Eingabefeld der KI ein und sende ihn zusammen mit der ZIP ab. Ergänze bei Bedarf eigene Wünsche. ZIP-Unterstützung und Bildauswertung hängen vom jeweiligen Dienst ab; der Startsatz fordert die KI ausdrücklich auf, Einschränkungen zu nennen.
 
 **Beispiel für eine Vorlesung:**
 

@@ -15,7 +15,7 @@ from .core import (Cancelled, ProcessingError, Settings, VideoInfo,
 from .hardware import benchmark_sample, duration_label, estimate_transcription, scan_hardware
 from .models import (APP_ROOT, MODEL_REPOS, MODEL_ROOT, MODEL_SIZES, discover_models,
                      download_model, model_complete)
-from .prompting import PURPOSES, SCREENSHOT_ROLES, PromptPreferences, build_prompt
+from .prompting import AI_START_MESSAGE, PURPOSES, SCREENSHOT_ROLES, PromptPreferences, build_prompt
 from .paths import DATA_ROOT, DEFAULT_EXPORT
 
 
@@ -218,6 +218,8 @@ class Application:
         self.abort.pack(side="left", padx=8)
         self.open_button = ttk.Button(actions, text="ZIP anzeigen", command=self._open_output, state="disabled")
         self.open_button.pack(side="right")
+        self.copy_start_button = ttk.Button(actions, text="KI-Startsatz kopieren", command=self._copy_start_message)
+        self.copy_start_button.pack(side="right", padx=(8, 8))
         self.progressbar = ttk.Progressbar(footer, variable=self.percent, maximum=100)
         self.progressbar.pack(fill="x")
         ttk.Label(footer, textvariable=self.status, wraplength=850).pack(anchor="w", pady=(5, 4))
@@ -335,6 +337,14 @@ class Application:
         disabled = self.busy or unknown
         for widget in (self.relevance_slider, self.relevance_min, self.relevance_max, self.relevance_caption):
             widget.state(["disabled"] if disabled else ["!disabled"])
+
+    def _copy_start_message(self):
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(AI_START_MESSAGE)
+            self.status.set("KI-Startsatz kopiert. ZIP in deiner KI hochladen und den Satz mit Strg+V einfügen.")
+        except tk.TclError as exc:
+            messagebox.showerror("KI-Startsatz kopieren", str(exc))
 
     def _copy_prompt(self):
         try:
@@ -558,7 +568,9 @@ class Application:
                 self.status.set("Fertig. ZIP mit Transkript, Screenshots und prompt.md. Qualitätshinweise im Transkript beachten.")
                 self._log(f"Gespeichert: {value}")
                 if not self.close_pending:
-                    messagebox.showinfo("Aufbereitung abgeschlossen", f"ZIP-Datei:\n{value}")
+                    messagebox.showinfo("Aufbereitung abgeschlossen", f"ZIP-Datei:\n{value}\n\n"
+                                        "Mit „KI-Startsatz kopieren“ kannst du den kurzen Auftrag für deine KI kopieren.\n"
+                                        "Lade dort die ZIP hoch und füge den Satz mit Strg+V ein.")
             elif kind == "error":
                 self.status.set("Abgebrochen" if isinstance(value, Cancelled) else "Vorgang fehlgeschlagen")
                 self._log(str(value))
