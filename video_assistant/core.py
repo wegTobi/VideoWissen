@@ -16,6 +16,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+from .quality import finite, flag_adjacent_repetitions, review_windows, warnings as quality_warnings
+
 
 
 class ProcessingError(RuntimeError):
@@ -207,6 +209,49 @@ def extract_screenshots(info: VideoInfo, output: Path, settings: Settings,
     return shots
 
 
+def collect_transcript(iterator, offset, start, end, language, cancel, on_record=None):
+    records = []
+    for segment in iterator:
+        check_cancel(cancel)
+        all_words = getattr(segment, "words", None) or []
+        words = [word for word in all_words if finite(word.start) and finite(word.end)
+                 and start <= offset + (word.start + word.end) / 2 < end]
+        missing_words = not all_words
+        if words:
+            text = "".join(word.word for word in words).strip()
+            left, right = offset + words[0].start, offset + words[-1].end
+        elif missing_words:
+            text = getattr(segment, "text", "").strip()
+            left = offset + getattr(segment, "start", 0)
+            right = offset + getattr(segment, "end", 0)
+            if not finite(left) or not finite(right) or not start <= (left + right) / 2 < end:
+                continue
+        else:
+            continue  # Words belong to the adjacent audio block.
+        if not text:
+            continue
+        left = max(start, left, records[-1]["end"] if records else start)
+        right = min(end, right)
+        if right <= left:
+            continue
+        record = {"start": round(left, 3), "end": round(right, 3), "text": text,
+                  "word_probabilities": [word.probability for word in words
+                                         if finite(getattr(word, "probability", None))]}
+        source_start, source_end = getattr(segment, "start", None), getattr(segment, "end", None)
+        record["review_start"] = max(start, min(left, offset + source_start)) if finite(source_start) else left
+        record["review_end"] = min(end, max(right, offset + source_end)) if finite(source_end) else right
+        for key in ("avg_logprob", "compression_ratio", "no_speech_prob"):
+            record[key] = getattr(segment, key, None)
+        record["warnings"] = quality_warnings(record, language)
+        if missing_words:
+            record["warnings"].append("Wortzeitstempel fehlen; Text anhand der Abschnittszeiten erhalten")
+        records.append(record)
+        if on_record:
+            on_record(record)
+    flag_adjacent_repetitions(records)
+    return records
+
+
 def transcribe(info: VideoInfo, output: Path, settings: Settings, cancel: threading.Event,
                progress: Callable, model_factory=None) -> dict:
     if not info.has_audio:
@@ -231,7 +276,7 @@ def transcribe(info: VideoInfo, output: Path, settings: Settings, cancel: thread
     check_cancel(cancel)
     segments = []
     detected_language = settings.language
-    result = {"schema_version": 1, "language": detected_language, "segments": segments}
+    result = {"schema_version": 2, "language": detected_language, "segments": segments, "reviews": []}
     # Nur ein Audioblock liegt als WAV/NumPy-Array vor; niemals die gesamte Tonspur.
     with tempfile.TemporaryDirectory(prefix="audio-", dir=output) as temporary:
         for block in range(math.ceil(info.duration / settings.chunk_seconds)):
@@ -251,38 +296,86 @@ def transcribe(info: VideoInfo, output: Path, settings: Settings, cancel: thread
                                                        word_timestamps=True)
             detected_language = detected_language or language_info.language
             result["language"] = detected_language
-            for segment in iterator:
+            # Midpoint ownership still prevents duplicate words in overlapping blocks.
+            records = collect_transcript(
+                iterator, audio_start, start, end, detected_language, cancel,
+                lambda record: progress(36 + 59 * (start + .8 * (record["end"] - start)) / info.duration,
+                                        f"Transkription {timestamp(int(record['end'])).split('.')[0]}"))
+            if not records and getattr(language_info, "duration_after_vad", 0) > 2:
+                records = [{"start": start, "end": end, "text": "[Kein Text erkannt.]",
+                            "warnings": ["Sprachaktivität erkannt, aber kein Transkript ausgegeben"]}]
+            # Catch loops crossing a five-minute boundary. Older parts remain
+            # marked for source review; retry only the current block.
+            flag_adjacent_repetitions(segments[-2:] + records)
+            for record in records:
+                record["id"] = f"segment_{len(segments) + 1:06d}"
+                segments.append(record)
+            windows = review_windows(records)
+            for index, (left, right) in enumerate(windows):
                 check_cancel(cancel)
-                # Überlappung nicht doppelt übernehmen: Wortmittelpunkt entscheidet den Block.
-                words = [w for w in (segment.words or [])
-                         if start <= audio_start + (w.start + w.end) / 2 < end]
-                if not words:
-                    continue
-                text = "".join(w.word for w in words).strip()
-                if not text:
-                    continue
-                left = max(start, audio_start + words[0].start,
-                           segments[-1]["end"] if segments else 0)
-                right = min(end, audio_start + words[-1].end)
-                if right <= left:
-                    continue
-                segments.append({"id": f"segment_{len(segments) + 1:06d}",
-                                 "start": round(left, 3), "end": round(right, 3), "text": text})
-                progress(min(95, 36 + 59 * right / info.duration),
-                         f"Transkription {timestamp(right)} / {timestamp(info.duration)}")
+                progress(36 + 59 * (start + (end - start) * (.8 + .2 * index / len(windows))) / info.duration,
+                         f"Qualitätsprüfung: {timestamp(int(left)).split('.')[0]} – {timestamp(int(right)).split('.')[0]} erneut erkennen …")
+                review = {"start": left, "end": right, "segments": [], "error": False}
+                result["reviews"].append(review)
+                try:
+                    retry_start, retry_end = max(0, left - 2), min(info.duration, right + 2)
+                    retry_audio = Path(temporary) / "retry.wav"
+                    run_ffmpeg(["-loglevel", "error", "-ss", str(retry_start), "-i", info.path,
+                                "-t", str(retry_end - retry_start), "-map", "0:a:0", "-vn", "-ac", "1",
+                                "-ar", "16000", "-c:a", "pcm_s16le", str(retry_audio)], cancel)
+                    retry_iterator, _ = model.transcribe(str(retry_audio), language=detected_language,
+                                                        beam_size=5, vad_filter=True, word_timestamps=True,
+                                                        condition_on_previous_text=False, temperature=0.0)
+                    review["segments"] = collect_transcript(retry_iterator, retry_start, left, right,
+                                                             detected_language, cancel)
+                except Cancelled:
+                    raise
+                except Exception:
+                    # A failed optional retry must never discard the first result.
+                    check_cancel(cancel)
+                    review["error"] = True
+            progress(36 + 59 * end / info.duration,
+                     f"Transkription und Qualitätsprüfung bis {timestamp(int(end)).split('.')[0]}")
             write_transcript(output, result)
+    count = sum(bool(segment.get("warnings")) for segment in segments)
+    progress(95, f"Qualitätsprüfung abgeschlossen: {count} auffällige Abschnitte im Transkript markiert.")
     return result
 
 
 def write_transcript(output: Path, result: dict):
     paragraphs = ["# Transkript", "", f"Sprache: {result['language'] or 'unbekannt'}", ""]
+    count = sum(bool(segment.get("warnings")) for segment in result["segments"])
+    if count:
+        paragraphs.extend([f"> **Qualitätshinweis: {count} Abschnitte sind als unsicher markiert.**",
+                           "> Das sind automatische Verdachtsmeldungen, keine bewiesenen Fehler. Prüfe den Originalton. "
+                           "Erst- und Zweiterkennung sind keine gesicherten Aussagen; die Zweiterkennung steht am Ende.", ""])
     for segment in result["segments"]:
         start = timestamp(int(segment["start"])).split(".", 1)[0]
         end = timestamp(int(segment["end"])).split(".", 1)[0]
-        paragraphs.extend([f"## {start} – {end}",
-                           "", segment["text"], ""])
+        paragraphs.extend([f"## {start} – {end}", ""])
+        if segment.get("warnings"):
+            paragraphs.extend(["> **Transkription unsicher:** " + "; ".join(segment["warnings"]) + ".", ""])
+        paragraphs.extend([segment["text"], ""])
     if not result["segments"]:
         paragraphs.append("Keine Sprache erkannt.")
+    if result.get("reviews"):
+        paragraphs.extend(["# Nachprüfung unsicherer Stellen", "",
+                           "Die folgenden Alternativen wurden einmalig ohne vorherigen Textkontext erkannt. "
+                           "Sie ersetzen den ursprünglichen Text nicht. Auch unauffällige Alternativen können falsch sein. "
+                           "Widersprüche und fehlenden Inhalt nur anhand der Originalaufnahme klären.", ""])
+        for review in result["reviews"]:
+            left = timestamp(int(review["start"])).split(".", 1)[0]
+            right = timestamp(int(review["end"])).split(".", 1)[0]
+            paragraphs.extend([f"## {left} – {right} · Alternative Erkennung (unsicher)", ""])
+            if review["error"]:
+                paragraphs.extend(["Zweiterkennung fehlgeschlagen. Ursprünglichen Text und Originalton prüfen.", ""])
+            elif not review["segments"]:
+                paragraphs.extend(["Zweiterkennung lieferte keinen Text. Das beweist nicht, dass hier nicht gesprochen wurde.", ""])
+            for candidate in review["segments"]:
+                timecode = timestamp(int(candidate["start"])).split(".", 1)[0]
+                paragraphs.extend([f"**{timecode}:** {candidate['text']}", ""])
+                if candidate.get("warnings"):
+                    paragraphs.extend(["> Weiterhin auffällig: " + "; ".join(candidate["warnings"]) + ".", ""])
     (output / "transcript.md").write_text("\n".join(paragraphs), encoding="utf-8")
 
 

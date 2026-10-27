@@ -523,7 +523,7 @@ class Application:
                     self.model_status.set(value[1])
                 if not self.cancel.is_set():
                     self.status.set(value[1])
-                if value[0] == 2:
+                if value[0] == 2 or value[1].startswith("Qualitätsprüfung abgeschlossen:"):
                     self._log(value[1])
             elif kind == "scan":
                 self.hardware, found = value
@@ -555,7 +555,7 @@ class Application:
                 self._estimate()
             elif kind == "done":
                 self.output = value
-                self.status.set("Fertig. Die ZIP-Datei enthält Transkript, Screenshots und prompt.md.")
+                self.status.set("Fertig. ZIP mit Transkript, Screenshots und prompt.md. Qualitätshinweise im Transkript beachten.")
                 self._log(f"Gespeichert: {value}")
                 if not self.close_pending:
                     messagebox.showinfo("Aufbereitung abgeschlossen", f"ZIP-Datei:\n{value}")

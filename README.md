@@ -106,6 +106,34 @@ Die ZIP enthält ausschließlich das Transkript, den Prompt und die Bilder. Das 
 
 Wenn du das Ergebnis anschließend selbst bei einem KI-Dienst hochlädst, gibst du die enthaltenen Informationen an diesen Dienst weiter. Prüfe deshalb vorher, ob du die Inhalte teilen darfst – gerade bei persönlichen Gesprächen, vertraulichen Meetings oder nicht öffentlichen Vorlesungen.
 
+## Wie geht die App mit unsicheren Transkriptionen um?
+
+VideoWissen prüft den erkannten Text automatisch auf auffällige Wiederholungen,
+lange Abschnitte mit sehr wenig Text und schwache Erkennungssignale des Modells.
+Einzelne englische Passagen oder fremde Schriftzeichen gelten allein nicht als Fehler.
+Die Prüfung ist eine Orientierung: Sie kann falschen Alarm auslösen und Fehler übersehen.
+Erkennungssignale sind keine verlässlichen Prozentangaben für die Richtigkeit.
+
+Auffällige Stellen werden einmal in kurzen Ausschnitten von höchstens 30 Sekunden
+mit bis zu zwei Sekunden Kontext auf jeder Seite erneut transkribiert. Dabei wird
+der vorherige Text nicht als Kontext vorgegeben. Die Nachprüfung bleibt lokal,
+verwendet dasselbe Modell und kann die Laufzeit verlängern. Die angezeigte
+Zeitschätzung berücksichtigt diese zusätzlichen Versuche nicht.
+
+Im Transkript findest du dann:
+
+- **Transkription unsicher:** den Grund der Markierung direkt vor dem ursprünglichen Text.
+- **Nachprüfung unsicherer Stellen:** eine alternative Erkennung mit Zeitstempeln am Ende.
+  Sie ersetzt den ursprünglichen Text nicht und ist ebenfalls zu prüfen.
+- Einen ausdrücklichen Hinweis, falls die Zweiterkennung fehlschlägt oder keinen Text liefert.
+
+Prüfe wichtige oder widersprüchliche Stellen anhand des Originaltons. Aus einer leeren
+Zweiterkennung folgt nicht, dass dort niemand gesprochen hat. Der mitgelieferte Prompt
+weist die spätere KI an, diese Unsicherheiten und Lücken zu nennen und die beiden
+Erkennungen nicht als unabhängige Belege oder zwei verschiedene Ereignisse zu behandeln.
+Auch ein Transkript ohne Warnhinweise kann Fehler enthalten. Sprechertrennung und eine
+automatische inhaltliche Verifikation sind nicht enthalten.
+
 ## Wenn etwas nicht klappt
 
 | Problem | Das kannst du tun |

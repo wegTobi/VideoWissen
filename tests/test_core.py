@@ -35,7 +35,7 @@ class FakeModel:
             assert wav.getnchannels() == 1
             assert wav.getframerate() == 16000
         self.calls.append(duration)
-        words = [SimpleNamespace(start=i + .1, end=i + .9, word=" Schritt")
+        words = [SimpleNamespace(start=i + .1, end=i + .9, word=f" Schritt{i}")
                  for i in range(int(duration))]
         return iter([SimpleNamespace(words=words)]), SimpleNamespace(language="de")
 

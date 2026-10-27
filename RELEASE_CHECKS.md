@@ -1,5 +1,23 @@
 # Freigabeprüfung: Windows x64
 
+## Aktualisierung: Transkript-Qualitätsprüfung
+
+- Konservative Warnhinweise für Schleifen, wiederholte Nachbarabschnitte, lange
+  Textlücken und schwache Modellwerte. Fremde Schrift allein reicht nicht als Warnsignal.
+- Einmalige lokale Zweiterkennung verdächtiger Bereiche in höchstens 30-s-Ausschnitten
+  mit je bis zu zwei Sekunden Kontext, ohne vorherigen Textkontext, Temperatur 0.
+  Ersttext bleibt erhalten; Alternativen und Fehler werden ausdrücklich als unsicher markiert.
+- Fehlende Wortzeitstempel verwerfen den Abschnittstext nicht mehr. Erkannte
+  Sprachaktivität ohne Text wird als Lücke gekennzeichnet.
+- Exportierter Prompt erklärt Unsicherheiten, Widersprüche und gemeinsame Quelle der Alternativen.
+- Zusätzliche Tests prüfen Warnsignale und Gegenbeispiele, begrenzte Ausschnitte,
+  Originaltexterhalt, leere/fehlgeschlagene Zweiterkennung, Abbruch und Bereinigung.
+- Alle 27 Tests einschließlich echter tiny-Spracherkennung und synthetischem
+  Zweistundenvideo erfolgreich. Zweistundentest: 240 Bilder, 24 Audioblöcke, maximal 304 s.
+- Neu gebaute EXE: echte Spracherkennung, ZIP-Export, Sprachprobe sowie ein
+  simulierter Wiederholungsfall mit echter FFmpeg-Audioextraktion erfolgreich.
+  Die konkreten Vergleichsaufnahmen des Nutzers lagen nicht zum Genauigkeitsvergleich vor.
+
 ## Aktualisierung: Prompt im ZIP
 
 - Neue Ergebnis-ZIPs enthalten transcript.md, prompt.md und screenshots/*.jpg.

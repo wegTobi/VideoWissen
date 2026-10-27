@@ -5,6 +5,7 @@ import threading
 import traceback
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 
 
 def run_self_test(report_path: str, model_path: str | None = None, audio_path: str | None = None,
@@ -47,6 +48,33 @@ def run_self_test(report_path: str, model_path: str | None = None, audio_path: s
             run_ffmpeg(args, threading.Event())
             info = probe_video(video)
             report["video_duration"] = info.duration
+
+            class QualityTestModel:
+                """Deterministic suspect output, for the explicit package self-test only."""
+                calls = 0
+
+                def __init__(self, *args, **kwargs):
+                    pass
+
+                def transcribe(self, audio, **kwargs):
+                    QualityTestModel.calls += 1
+                    if QualityTestModel.calls == 1:
+                        words = [SimpleNamespace(start=i * .3, end=i * .3 + .2, word=" Zwei!")
+                                 for i in range(10)]
+                    else:
+                        assert kwargs["condition_on_previous_text"] is False
+                        words = [SimpleNamespace(start=.1, end=.9, word=" Alternative")]
+                    return iter([SimpleNamespace(words=words)]), SimpleNamespace(language="de")
+
+            quality_zip = process_video(info, folder / "quality-export", Settings(rate=20),
+                                        threading.Event(), lambda *_: None, QualityTestModel)
+            with zipfile.ZipFile(quality_zip) as archive:
+                text = archive.read("transcript.md").decode("utf-8")
+                assert "Transkription unsicher" in text and "Alternative Erkennung (unsicher)" in text
+                assert "Zwei!" in text and "Alternative" in text
+                assert "keine unabhängigen" in archive.read("prompt.md").decode("utf-8")
+            assert QualityTestModel.calls == 2
+            report["quality_retry"] = "passed_synthetic_model_real_ffmpeg"
             if model_path:
                 output = process_video(info, folder / "export", Settings(model=str(Path(model_path).resolve()),
                                        language="en", rate=20), threading.Event(), lambda *_: None)
