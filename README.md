@@ -1,146 +1,184 @@
 # VideoWissen
 
-VideoWissen erstellt aus Vorlesungen, Schulungen und anderen lokalen Videos ein
-Transkript mit Zeitstempeln und regelmäßige Screenshots. Die deutsche Desktop-App
-transkribiert mit faster-whisper auf deinem Rechner, ohne Cloud-API.
+**Aus einer Videoaufnahme wird die Grundlage für ausführliche Mitschriften, verständliche Zusammenfassungen und Schritt-für-Schritt-Anleitungen.**
 
-## Windows: direkt starten
+Du hast eine Vorlesung aufgenommen, eine Schulung besucht oder möchtest ein Meeting später in Ruhe nachvollziehen? VideoWissen schreibt das Gesprochene auf und speichert regelmäßig Bilder aus dem Video. So bleiben neben den Erklärungen auch Folien, Tafelbilder oder gezeigte Arbeitsschritte verfügbar.
 
-Im veröffentlichten Repository: **Code → Download ZIP**, das gesamte Archiv entpacken
-und **VideoWissen.exe** im entpackten Ordner doppelklicken. Python und FFmpeg sind
-bereits mitgeliefert. Der Ordner **_internal/** muss neben der EXE bleiben; die EXE
-nicht einzeln herauskopieren und nicht direkt aus der ZIP starten.
+Die deutschsprachige App läuft auf deinem Windows-PC. Du brauchst keine Programmierkenntnisse und kein GitHub-Konto. Die Transkription erfolgt lokal auf deinem Rechner.
 
-Die portable Version ist für **Windows 10/11 x64** gedacht. CPU-Verarbeitung benötigt
-keine NVIDIA-GPU. Internet wird nur für den ausdrücklich gestarteten ersten
-Modelldownload benötigt. Danach ist lokale Offline-Verarbeitung möglich. GPU ist
-optional und benötigt passende NVIDIA-/CUDA-Laufzeitbibliotheken.
+## Wofür kann ich das verwenden?
 
-Modelle und temporäre Sprachproben der EXE liegen unter **%LOCALAPPDATA%/VideoWissen/**.
-Der Standard-Zielordner für Exporte ist **Dokumente/VideoWissen/** und kann geändert
-werden. Standardmäßig landen persönliche Laufzeitdaten außerhalb des App-Ordners.
+- **Im Studium:** Vorlesungen und Seminare nacharbeiten, Lernzettel vorbereiten, Erklärungen zu Folien nachvollziehen oder Übungsfragen erstellen lassen.
+- **Bei der Arbeit:** Besprechungen nachbereiten, Entscheidungen und Aufgaben herausarbeiten oder eine interne Schulung dokumentieren.
+- **Beim Lernen und Einarbeiten:** Aus Tutorials, Workshops und Bildschirmaufnahmen eine Anleitung erstellen, die du später Schritt für Schritt durchgehen kannst.
 
-Die EXE ist nicht digital signiert. Windows kann die unbekannte Herkunft melden.
-Herkunft und SHA256SUMS.txt prüfen; Sicherheitseinstellungen nicht abschalten.
+### Beispiel: Mit dem Handy aufnehmen, später besser lernen
 
-## Quellcode ausführen / entwickeln
+Du nimmst mit dem Handy eine Vorlesung als Video auf. Zu Hause überträgst du die Datei auf deinen PC und öffnest sie in VideoWissen. Die App erstellt ein Transkript mit Zeitstempeln und Bilder aus der Aufnahme.
 
-1. Python **3.10 bis 3.13, 64 Bit**, mit pip, Tcl/Tk und Python Launcher installieren:
-   https://www.python.org/downloads/windows/
-2. PowerShell im entpackten Projektordner öffnen:
+Anschließend gibst du diese Dateien zusammen mit einem passenden Arbeitsauftrag an eine KI, die Texte und Bilder verarbeiten kann. Daraus kannst du dir beispielsweise eine ausführliche Mitschrift mit Begriffserklärungen, Beispielen und Fragen zur Prüfungsvorbereitung erstellen lassen. Die KI kann dabei sowohl das Gesprochene als auch sichtbare Folien berücksichtigen. Das ermöglicht deutlich mehr Detail als eine kurze Zusammenfassung allein aus Stichpunkten.
 
-       powershell -ExecutionPolicy Bypass -File .\install.ps1
+**Für gute Ergebnisse:** Nimm möglichst verständlichen Ton auf und achte darauf, dass Folien oder Tafelbilder lesbar sind. Halte vor einer Aufnahme die nötigen Einwilligungen und geltenden Regeln ein.
 
-   Ein bestimmter Interpreter lässt sich mit dem Parameter -Python angeben.
-3. Zum Starten **start.bat** doppelklicken.
+VideoWissen selbst erstellt das Transkript und die Bilder. Die ausgearbeitete Mitschrift entsteht erst bei der anschließenden KI-Auswertung. Ein perfektes oder vollständiges Ergebnis lässt sich nicht garantieren: Namen, Zahlen und Fachbegriffe solltest du anhand der Aufnahme prüfen.
 
-FFmpeg wird über imageio-ffmpeg mitinstalliert. Ein FFmpeg im PATH hat Vorrang;
-FFMPEG_BINARY erlaubt einen eigenen vollständigen Pfad. Mindestens FFmpeg 5 wird
-benötigt, ein separates ffprobe nicht. Getestete Paketversionen: requirements-lock.txt.
+## In wenigen Minuten starten – ohne Installation
 
-## Verwendung
+Du brauchst einen **Windows-PC mit Windows 10 oder 11, 64 Bit**. Eine besondere Grafikkarte ist nicht erforderlich.
 
-1. **Video auswählen.** Dauer, Dateigröße und Tonspur werden angezeigt.
-2. **Verarbeitung einstellen.** Der Screenshot-Slider reicht von 1 bis 60 Bildern pro
-   Minute; die voraussichtliche Anzahl erscheint vor dem Start. Sprache: Deutsch,
-   Automatisch oder Englisch. Berechnung: CPU oder NVIDIA-GPU.
-3. **Modell bereitstellen.** Das Dropdown zeigt vorhandene und fehlende Modelle.
-   Fehlende Modelle ausdrücklich über **Modell herunterladen** installieren. Beim
-   Verarbeitungsstart wird niemals automatisch ein Modell heruntergeladen. Eigene
-   CTranslate2-Modelle: **Extras → Eigenes Whisper-Modell wählen**.
-4. **Zielordner wählen** und **Aufbereitung starten**.
-5. **ZIP anzeigen** zeigt die fertige Datei im Explorer.
-   Unter der Statusmeldung lässt sich bei Bedarf **Verarbeitungsprotokoll anzeigen**
-   einschalten. Dort stehen Hinweise, Speicherorte und Fehlermeldungen. Das Protokoll
-   ist standardmäßig eingeklappt und wird nicht exportiert.
-6. Unter **KI-Auswertung anpassen** Ausgabeziel, Rolle der Bilder, relevanten
-   Inhaltsanteil, Zielgruppe und Zusatzwünsche wählen. **Prompt ansehen und kopieren**
-   öffnet den generierten Prompt in einem separaten Fenster. Dort kopiert **Prompt
-   kopieren** den Text in die Zwischenablage. Den Prompt anschließend manuell in
-   deiner KI einfügen. Er wird ausschließlich im Arbeitsspeicher gehalten und weder
-   als Datei gespeichert noch in das ZIP aufgenommen.
+1. **[VideoWissen als ZIP herunterladen](https://github.com/wegTobi/VideoWissen/archive/refs/heads/main.zip).** Alternativ auf dieser GitHub-Seite oben auf den grünen Button **Code** und dann **Download ZIP** klicken. Eine Anmeldung ist dafür nicht nötig.
+2. Im Download-Ordner mit der rechten Maustaste auf die heruntergeladene ZIP-Datei klicken und **Alle extrahieren …** wählen.
+3. Den entpackten Ordner öffnen und **VideoWissen.exe** doppelt anklicken. Falls Dateiendungen ausgeblendet sind, heißt die Datei möglicherweise nur **VideoWissen** und hat den Typ „Anwendung“.
 
-Installation und Modelldownload brauchen Internet. Danach funktioniert die Verarbeitung
-auch offline. Videos und Ton werden nicht hochgeladen. Modelle liegen unter models/;
-vorhandene vollständige Hugging-Face-Caches werden ebenfalls erkannt.
+**Wichtig:** Die App aus dem entpackten Ordner starten. Den Ordner **_internal** neben der Anwendung lassen und die EXE nicht einzeln herauskopieren. Python und die nötigen Werkzeuge sind bereits enthalten.
 
-## Export: genau eine ZIP-Datei
+Die Anwendung ist nicht digital signiert. Windows kann deshalb einen Hinweis zur unbekannten Herkunft anzeigen. Verwende den Download aus diesem Repository; schalte die Sicherheitseinstellungen deines PCs nicht aus.
 
-Im Zielordner entsteht ausschließlich die fertige ZIP-Datei:
+## Deine erste Aufnahme verarbeiten
 
-    Aufnahme_20261027_120000.zip
-      transcript.md
-      screenshots/
-        000001_00-00-00.000.jpg
-        000002_00-00-12.000.jpg
-        ...
+### 1. Video auswählen
 
-Das Archiv enthält **nur das lesbare Transkript und die JPEG-Screenshots**.
-Keine Prompts, KI-Anweisungen, README, JSON-Metadaten oder Originalvideos.
-Transkript und Bilddateinamen tragen Zeitstempel ab Videobeginn. Prompts werden
-manuell bei der späteren KI eingegeben.
+Übertrage die Aufnahme vom Handy auf deinen PC oder verwende eine vorhandene Videodatei, zum Beispiel eine Bildschirmaufnahme aus OBS. Wähle sie in der App aus. VideoWissen zeigt dir Dauer und Dateigröße an. Die App nimmt selbst keine Videos auf.
 
-Arbeitsdateien liegen vorübergehend im Zielordner und werden bei regulärem Abschluss,
-Fehler und Abbruch entfernt. Eine ZIP wird erst vollständig veröffentlicht.
-Bestehende ZIPs werden nicht überschrieben. Bei Fehler oder Abbruch bleibt kein neuer
-Teil-Export. Nach einem Prozessabsturz können temporäre Arbeitsdateien verbleiben.
-Ältere Exporte werden nicht verändert oder gelöscht.
+### 2. Einstellungen wählen
 
-## Hardware und Dauer
+Für den ersten Versuch kannst du mit diesen Einstellungen beginnen:
 
-Beim Start werden CPU, Kerne, RAM und gegebenenfalls NVIDIA-GPU/VRAM/CUDA lokal geprüft.
-**Extras → Hardware erneut prüfen** wiederholt den Scan. Die Zeitspanne berücksichtigt
-Videolänge, Modell und Hardware. Sie betrifft die Transkription ohne Download und Export
-und ist eine grobe Heuristik, keine garantierte Laufzeit.
+| Einstellung | Einfacher Einstieg |
+| --- | --- |
+| Sprache | **Deutsch** für deutsche Aufnahmen; außerdem gibt es Englisch und Automatisch. |
+| Berechnung | **CPU (empfohlen)** – funktioniert ohne besondere Grafikkarte. |
+| Whisper-Modell | **small** als Ausgangspunkt. Ein Modell ist das Sprachpaket, mit dem die App Gesprochenes erkennt. |
+| Screenshots pro Minute | **5** – ungefähr alle zwölf Sekunden ein Bild. |
 
-**Zeitschätzung mit Sprachprobe verfeinern** verarbeitet bis zu 30 Sekunden aus der
-Videomitte. Das Modell muss bereits lokal vorliegen. Bei zu wenig Sprache bleibt die
-Hardware-Schätzung aktiv. Die Probe kann vom übrigen Video abweichen und gilt nur für
-das aktuelle Video, Modell, Gerät und die Sprache in dieser Sitzung.
+Beim Modell steht, ob es bereits vorhanden ist oder noch heruntergeladen werden muss. Klicke bei Bedarf auf **Modell herunterladen** und warte, bis der Download fertig ist. Dafür brauchst du Internet. Danach kannst du dieses Modell auch ohne Internet verwenden. Beim Start der Verarbeitung wird kein Modell automatisch heruntergeladen.
 
-CPU/INT8 benötigt kein CUDA. Die GPU-Option erfordert passende NVIDIA-/CUDA-/cuDNN-
-Bibliotheken. GPU-Erkennung allein garantiert deren Kompatibilität nicht.
+Größere Modelle brauchen mehr Arbeitsspeicher und können auf der CPU deutlich länger rechnen; sie können bei schwierigen Aufnahmen bessere Ergebnisse liefern. Du kannst später verschiedene Modelle ausprobieren.
 
-## Lange Videos und Grenzen
+Mit dem Screenshot-Regler wählst du **1 bis 60 Bilder pro Minute**. Die App zeigt vorab, wie viele Bilder ungefähr entstehen. Häufig wechselnde Folien oder schnelle Arbeitsschritte brauchen eher mehr Bilder. Bei einer Aufnahme von 90 Minuten ergeben 5 Bilder pro Minute ungefähr **450 Bilder** – für eine spätere KI kann es sinnvoll sein, die Aufnahme in mehrere Teile aufzuteilen.
 
-- FFmpeg dekodiert fortlaufend; das gesamte Video wird nicht in den RAM geladen.
-- Audio wird in fünfminütigen Mono-WAV-Blöcken mit 16 kHz und je zwei Sekunden
-  Kontextüberlappung verarbeitet. Nur Modell und aktueller Audioblock liegen im RAM.
-- Bildbreite maximal 1600 Pixel. Die Bildanzahl ist eine Schätzung; fehlende Frames
-  und variable Bildraten können Abweichungen verursachen.
-- Erste Video- und erste Audiospur; mehrere Tonspuren bei Bedarf vorher zusammenmischen.
-  Keine Sprechertrennung oder OCR. Whisper kann Begriffe und Zahlen falsch erkennen.
-- Abbrechen beendet FFmpeg zeitnah. Modell-/Netzwerkaufrufe können erst bei ihrer
-  Rückkehr beendet werden. Keine automatische Wiederaufnahme.
-- Ausreichend Speicherplatz für temporäre Bilder und die ZIP vorsehen.
+Die angezeigte Dauer ist eine grobe Schätzung anhand von Videolänge, Modell und Hardware. Mit **Zeitschätzung mit Sprachprobe verfeinern** kannst du eine kurze Probe verarbeiten lassen, bevor du das gesamte Video startest.
 
-## Tests
+### 3. Zielordner wählen und starten
 
-    .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+Wähle, wo das Ergebnis gespeichert werden soll, und klicke auf **Aufbereitung starten**. Längere Aufnahmen können je nach Rechner und Modell viel Zeit benötigen. Die App zeigt den Fortschritt an.
 
-Optional mit lokalem Modell und synthetischem Zweistundenvideo:
+Wenn alles fertig ist, findest du über **ZIP anzeigen** die Ergebnisdatei im Windows-Explorer. Standardmäßig wird unter **Dokumente/VideoWissen** gespeichert.
 
-    $env:WHISPER_TEST_MODEL = (Resolve-Path models\tiny).Path
-    $env:RUN_LONG_VIDEO_TEST = '1'
-    .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+## Aus dem Ergebnis Mitschriften und Lernmaterial erstellen
 
-Der Sprachtest erzeugt unter Windows per System.Speech ein lokales Beispiel;
-WHISPER_TEST_AUDIO erlaubt eine eigene WAV-Datei. Der Zweistundentest verwendet
-echte FFmpeg-Verarbeitung und eine Modellattrappe.
+1. Stelle in der App unter **KI-Auswertung anpassen** ein, was entstehen soll: zum Beispiel Lernmaterial, eine Zusammenfassung oder eine Anleitung. Gib an, ob die Bilder wichtige Details zeigen oder eher zur Orientierung dienen, wie viel vom Gespräch relevant war und für wen der Text gedacht ist.
+2. Klicke auf **Prompt ansehen und kopieren …** und im geöffneten Fenster auf **Prompt kopieren**. Ein „Prompt“ ist einfach der Arbeitsauftrag an die spätere KI.
+3. Öffne eine KI deiner Wahl, die Dateien und Bilder auswerten kann. Lade die fertige Ergebnis-ZIP hoch, sofern sie ZIP-Dateien unterstützt. Andernfalls entpacke die ZIP und füge das Transkript und die gewünschten Bilder einzeln oder in mehreren Teilen hinzu. Beachte die Datei- und Bildgrenzen des jeweiligen Dienstes.
+4. Füge den kopierten Arbeitsauftrag ins Eingabefeld der KI ein. Ergänze bei Bedarf eigene Wünsche und starte die Auswertung.
+
+**Beispiel für eine Vorlesung:**
+
+> Erstelle eine ausführliche, gut gegliederte Mitschrift zur Prüfungsvorbereitung. Erkläre die Fachbegriffe, übernimm die besprochenen Beispiele und berücksichtige lesbare Inhalte der Folien. Verweise bei wichtigen Punkten auf die Zeitstempel. Kennzeichne unklare Stellen und ergänze am Ende Verständnisfragen mit Antworten. Erfinde keine Inhalte, die aus den Dateien nicht hervorgehen.
+
+**Beispiel für ein berufliches Meeting:**
+
+> Erstelle ein übersichtliches Besprechungsprotokoll mit Themen, Entscheidungen, offenen Fragen und nächsten Schritten. Nenne Verantwortliche und Termine nur, wenn sie aus dem Material eindeutig hervorgehen. Nutze die Screenshots, wenn sie für das Verständnis relevant sind, und kennzeichne Unsicherheiten.
+
+Der Prompt wird **nur zum Kopieren angezeigt**. Er wird weder als Datei gespeichert noch in die ZIP aufgenommen.
+
+## Was steckt in der Ergebnis-ZIP?
+
+```text
+Aufnahme_20261027_120000.zip
+├── transcript.md
+└── screenshots/
+    ├── 000001_00-00-00.000.jpg
+    ├── 000002_00-00-12.000.jpg
+    └── …
+```
+
+- **transcript.md:** Das Gesprochene als Text mit Zeitstempeln. Du kannst die Datei auch mit einem normalen Texteditor öffnen.
+- **screenshots/:** Bilder aus dem Video in zeitlicher Reihenfolge. Die Dateinamen enthalten jeweils die Position im Video.
+
+Die ZIP enthält ausschließlich das Transkript und die Bilder. Das Originalvideo und der Prompt werden nicht mit eingepackt. Bewahre die ursprüngliche Aufnahme auf, wenn du später Stellen nachprüfen möchtest.
+
+## Bleiben meine Aufnahmen privat?
+
+**VideoWissen lädt deine Videos, Tonaufnahmen, Transkripte und Screenshots nicht hoch.** Die Verarbeitung erfolgt auf deinem PC. Internet wird für den ausdrücklich gestarteten Modelldownload benötigt.
+
+Wenn du das Ergebnis anschließend selbst bei einem KI-Dienst hochlädst, gibst du die enthaltenen Informationen an diesen Dienst weiter. Prüfe deshalb vorher, ob du die Inhalte teilen darfst – gerade bei persönlichen Gesprächen, vertraulichen Meetings oder nicht öffentlichen Vorlesungen.
+
+## Wenn etwas nicht klappt
+
+| Problem | Das kannst du tun |
+| --- | --- |
+| Das Modell fehlt. | Auf **Modell herunterladen** klicken und den Download abwarten. |
+| Die Verarbeitung dauert lange. | Ein kleineres Modell ausprobieren und die Zeitschätzung beachten. Ein zweistündiges Video kann längere Rechenzeit brauchen. |
+| Eine Fehlermeldung erwähnt CUDA oder die Grafikkarte. | Bei Berechnung **CPU (empfohlen)** auswählen. |
+| Die Aufnahme hat keinen Ton oder das Transkript ist leer. | Das Originalvideo abspielen und prüfen, ob die Sprache hörbar ist. |
+| Folien oder Tafelbilder sind nicht lesbar. | Die Aufnahme prüfen. Mehr Screenshots können häufigere Bilder liefern, aber unscharfe Schrift nicht wiederherstellen. |
+| Die ZIP lässt sich nicht speichern. | Einen beschreibbaren Zielordner wählen und freien Speicherplatz prüfen. |
+| Die KI nimmt die ZIP nicht an. | ZIP entpacken und Transkript sowie Bilder in kleineren Teilen hinzufügen. |
+
+Für weitere Hinweise kannst du unter der Statusmeldung **Verarbeitungsprotokoll anzeigen** einschalten.
+
+## Grenzen, die du kennen solltest
+
+- Die Qualität hängt von Ton, Aufnahme und gewähltem Modell ab. Whisper kann Wörter, Namen oder Zahlen falsch erkennen. Die App trennt Sprecher nicht automatisch voneinander.
+- Screenshots entstehen in festen Abständen. Dazwischen eingeblendete Inhalte können fehlen. Die App liest Text in Bildern nicht selbst aus; dafür muss die spätere KI Bilder verstehen können.
+- Auch lange Videos von etwa zwei Stunden lassen sich verarbeiten, ohne das gesamte Video in den Arbeitsspeicher zu laden. Genügend Speicherplatz für Arbeitsdateien und die fertige ZIP muss trotzdem vorhanden sein.
+- Die appseitige Bildbreite ist auf maximal 1600 Pixel begrenzt. Es werden die erste Video- und die erste Audiospur verwendet.
+- Transkription und KI-Auswertung können Fehler enthalten. Prüfe wichtige Aussagen und verwende die Ergebnisse als Unterstützung beim Lernen oder Nacharbeiten.
 
 ## An Freunde weitergeben
 
-Das vollständig entpackte öffentliche Repository kann inklusive VideoWissen.exe und
-_internal/ weitergegeben werden. Es ist keine Python-Installation erforderlich.
-Eigene Modelle, Videos und Exporte nicht mitgeben. Für neue Builds oder den ersten
-GitHub-Push siehe **PUBLISHING.md**; Lizenztexte stehen in **THIRD_PARTY_NOTICES.md**.
+Teile einfach den **[Download-Link](https://github.com/wegTobi/VideoWissen/archive/refs/heads/main.zip)** oder den **[Link zu dieser Anleitung](https://github.com/wegTobi/VideoWissen#readme)**. Jede Person lädt bei der ersten Einrichtung ihr gewünschtes Sprachmodell selbst herunter. Ein GitHub-Konto oder eine Python-Installation ist nicht nötig.
 
-## Fehlerbehebung
+<details>
+<summary><strong>Technische Informationen, Quellcode und Entwicklung</strong></summary>
 
-- **Modell fehlt:** Download-Button oder vollständigen lokalen CTranslate2-Modellordner verwenden.
-- **Keine Tonspur:** Aufnahme und Audiospuren prüfen. Stille kann ein leeres Transkript ergeben.
-- **CUDA-/DLL-Fehler:** CPU wählen; bei allgemeinen DLL-Fehlern Visual C++ Redistributable x64 prüfen.
-- **FFmpeg-Fehler:** Datei prüfen oder neu exportieren; OBS-Aufnahmen gegebenenfalls remuxen.
-- **Schreibfehler/Speicher voll:** Beschreibbaren Zielordner mit ausreichend Platz wählen.
+### Quellcode ausführen
 
-Technische Referenz: https://github.com/SYSTRAN/faster-whisper
+1. [Python für Windows](https://www.python.org/downloads/windows/) **3.10 bis 3.13, 64 Bit**, mit pip, Tcl/Tk und Python Launcher installieren.
+2. PowerShell im entpackten Projektordner öffnen und ausführen:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\install.ps1
+   ```
+
+   Mit dem Parameter `-Python` lässt sich ein bestimmter Interpreter angeben.
+3. Zum Starten **start.bat** doppelklicken.
+
+FFmpeg wird bei der Quellcode-Installation über imageio-ffmpeg mitinstalliert. Ein FFmpeg im PATH hat Vorrang; `FFMPEG_BINARY` erlaubt einen eigenen vollständigen Pfad. Mindestens FFmpeg 5 wird benötigt, ein separates ffprobe nicht. Getestete Paketversionen stehen in `requirements-lock.txt`.
+
+### Lokale Daten und Verarbeitung
+
+Bei der EXE liegen Modelle und temporäre Sprachproben unter `%LOCALAPPDATA%/VideoWissen/`; beim Quellcode-Start liegen Modelle unter `models/`. Vorhandene vollständige Hugging-Face-Caches werden ebenfalls erkannt. Eigene CTranslate2-Modelle lassen sich über **Extras → Eigenes Whisper-Modell wählen** einbinden.
+
+FFmpeg dekodiert das Video fortlaufend. Audio wird in fünfminütigen Mono-WAV-Blöcken mit 16 kHz und je zwei Sekunden Kontextüberlappung verarbeitet. Nur Modell und aktueller Audioblock liegen im RAM. Variable Bildraten und fehlende Frames können die geschätzte Bildanzahl verändern.
+
+Arbeitsdateien liegen vorübergehend im Zielordner und werden bei regulärem Abschluss, Fehler und Abbruch entfernt. Die ZIP wird erst vollständig veröffentlicht; bestehende ZIPs werden nicht überschrieben. Nach einem Prozessabsturz können temporäre Arbeitsdateien verbleiben. Ältere Exporte bleiben erhalten. Modell- und Netzwerkaufrufe können erst bei ihrer Rückkehr abgebrochen werden; eine automatische Wiederaufnahme gibt es nicht.
+
+### Hardware und Dauer
+
+Beim Start werden CPU, Kerne, RAM und gegebenenfalls NVIDIA-GPU, VRAM und CUDA lokal geprüft. **Extras → Hardware erneut prüfen** wiederholt den Scan. Die Zeitspanne ist eine Heuristik für die Transkription ohne Download und Export, keine garantierte Laufzeit.
+
+Die optionale Sprachprobe verarbeitet bis zu 30 Sekunden aus der Videomitte. Das Modell muss lokal vorliegen. Bei zu wenig Sprache bleibt die Hardware-Schätzung aktiv. Das Probenergebnis gilt nur für das aktuelle Video, Modell, Gerät und die Sprache in dieser Sitzung.
+
+CPU/INT8 benötigt kein CUDA. Die optionale GPU-Verarbeitung erfordert passende NVIDIA-/CUDA-/cuDNN-Bibliotheken. GPU-Erkennung allein garantiert deren Kompatibilität nicht. Bei allgemeinen DLL-Fehlern gegebenenfalls das Visual C++ Redistributable x64 prüfen.
+
+### Tests
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Optional mit lokalem Modell und synthetischem Zweistundenvideo:
+
+```powershell
+$env:WHISPER_TEST_MODEL = (Resolve-Path models\tiny).Path
+$env:RUN_LONG_VIDEO_TEST = '1'
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Der Sprachtest erzeugt unter Windows per System.Speech ein lokales Beispiel; `WHISPER_TEST_AUDIO` erlaubt eine eigene WAV-Datei. Der Zweistundentest verwendet echte FFmpeg-Verarbeitung und eine Modellattrappe.
+
+Für neue Windows-Builds und die Veröffentlichung siehe [PUBLISHING.md](PUBLISHING.md). Lizenztexte und Hinweise zu mitgelieferten Komponenten stehen in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Technische Referenz: [faster-whisper](https://github.com/SYSTRAN/faster-whisper).
+
+</details>
