@@ -440,7 +440,8 @@ class Application:
             Settings(rate=rate).validate()
             self.rate_label.set(f"{rate} / Min.")
             count = estimated_count(self.info.duration, rate) if self.info else None
-            self.estimate.set(f"Voraussichtlich {count:,} Bilder · alle {60 / rate:g} Sekunden".replace(",", ".")
+            interval = f"{600 // rate / 10:.1f}".replace(".", ",")
+            self.estimate.set(f"Voraussichtlich {count:,} Bilder".replace(",", ".") + f" · alle {interval} Sekunden"
                               if count is not None else "Voraussichtliche Bilder: —")
         except (ValueError, ProcessingError):
             self.estimate.set("Bitte 1 bis 60 Bilder pro Minute wählen.")
