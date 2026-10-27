@@ -524,7 +524,10 @@ class Application:
             elif kind == "probe":
                 self.info = value
                 audio = "Tonspur vorhanden" if value.has_audio else "Keine Tonspur gefunden"
-                self.details.set(f"Dauer {timestamp(value.duration)} · {value.size_bytes / 1024**3:.2f} GiB · {audio}")
+                duration = timestamp(value.duration).split(".", 1)[0]
+                divisor, unit = (1_000_000_000, "GB") if value.size_bytes >= 1_000_000_000 else (1_000_000, "MB")
+                size = f"{value.size_bytes / divisor:.2f}".replace(".", ",")
+                self.details.set(f"Dauer {duration} · {size} {unit} · {audio}")
                 self.status.set("Bereit" if value.has_audio else "Video ohne Tonspur kann nicht transkribiert werden.")
                 self._estimate()
             elif kind == "done":
