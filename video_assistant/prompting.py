@@ -11,7 +11,7 @@ SCREENSHOT_ROLES = ("Wichtige Inhalte und Details", "Nur zeitliche Orientierung"
 class PromptPreferences:
     purpose: str = PURPOSES[0]
     screenshot_role: str = SCREENSHOT_ROLES[0]
-    relevant_percent: int = 70
+    relevant_percent: int | None = 70
     audience: str = "Interessierte ohne Vorwissen"
     notes: str = ""
 
@@ -19,7 +19,7 @@ class PromptPreferences:
 def build_prompt(preferences: PromptPreferences) -> str:
     if preferences.purpose not in PURPOSES or preferences.screenshot_role not in SCREENSHOT_ROLES:
         raise ValueError("Bitte gültige Vorgaben für die KI-Auswertung wählen.")
-    if not 0 <= preferences.relevant_percent <= 100:
+    if preferences.relevant_percent is not None and not 0 <= preferences.relevant_percent <= 100:
         raise ValueError("Der relevante Inhaltsanteil muss zwischen 0 und 100 liegen.")
     if len(preferences.audience) > 300 or len(preferences.notes) > 4000:
         raise ValueError("Zielgruppe auf 300 und Zusatzwünsche auf 4000 Zeichen begrenzen.")
@@ -35,12 +35,21 @@ def build_prompt(preferences: PromptPreferences) -> str:
         SCREENSHOT_ROLES[2]: "Nutze Screenshots sowohl zur Orientierung als auch zur Prüfung wichtiger Details. Unterscheide visuell belegte Aussagen von bloßem Kontext.",
     }
     percent = preferences.relevant_percent
-    if percent <= 30:
+    if percent is None:
+        relevance_intro = "Der Nutzer kann den relevanten Inhaltsanteil nicht einschätzen. Es gibt keine Prozentvorgabe."
+        relevance = "Beurteile die Relevanz anhand des gewünschten Ausgabeziels und des Materials. Erhalte wichtige Erklärungen und Zusammenhänge; verdichte erkennbare Wiederholungen und Abschweifungen. Lege keine feste Kürzungsquote zugrunde."
+        relevance_guidance = "Lass notwendige Schritte, Voraussetzungen, Ausnahmen oder wichtige Hinweise nicht weg."
+    elif percent <= 30:
         relevance = "Filtere Smalltalk, Abschweifungen und Wiederholungen deutlich. Priorisiere fachliche Kernaussagen, Begriffe, Zusammenhänge und Ergebnisse."
     elif percent <= 70:
         relevance = "Verdichte Wiederholungen und Nebengespräche. Erhalte Zusammenhänge und Erklärungen, die zum Verständnis beitragen."
     else:
         relevance = "Behandle den Inhalt überwiegend als relevant. Erhalte Details und Begründungen und kürze vor allem Wiederholungen."
+    if percent is not None:
+        relevance_intro = f"Der Nutzer schätzt ungefähr {percent} % des Inhalts als relevant ein."
+        relevance_guidance = """Dies ist eine subjektive Orientierung, keine gemessene Quote und keine feste
+Kürzungsvorgabe. Auch bei 0 % zunächst den Inhalt prüfen. Lass notwendige Schritte,
+Voraussetzungen, Ausnahmen oder wichtige Hinweise nicht aufgrund dieser Schätzung weg."""
     return f"""# Arbeitsauftrag für die Video-Auswertung
 
 Du erhältst eine ZIP-Datei mit transcript.md und dem Ordner screenshots/.
@@ -58,11 +67,9 @@ Screenshots sind zeitliche Stichproben. Ein nahes Bild belegt nicht automatisch 
 konkrete Handlung. Kurze Abläufe können zwischen zwei Bildern fehlen.
 
 ## Relevanz des Inhalts
-Der Nutzer schätzt ungefähr {percent} % des Inhalts als relevant ein.
+{relevance_intro}
 {relevance}
-Dies ist eine subjektive Orientierung, keine gemessene Quote und keine feste
-Kürzungsvorgabe. Auch bei 0 % zunächst den Inhalt prüfen. Lass notwendige Schritte,
-Voraussetzungen, Ausnahmen oder wichtige Hinweise nicht aufgrund dieser Schätzung weg.
+{relevance_guidance}
 
 ## Zusatzwünsche
 {preferences.notes.strip() or 'Keine zusätzlichen Vorgaben.'}

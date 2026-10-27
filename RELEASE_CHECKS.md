@@ -1,5 +1,13 @@
 # Freigabeprüfung: Windows x64
 
+## Aktualisierung: Relevanz ohne Einschätzung
+
+- „Kann ich nicht einschätzen“ deaktiviert den Relevanzregler und erzeugt einen
+  Prompt ohne Prozentvorgabe. Der vorherige Reglerwert bleibt beim Umschalten erhalten.
+- 20 Tests ausgeführt: 18 erfolgreich, zwei optionale Langvideo-/Modelltests übersprungen.
+  Geprüft sind Live-Vorschau, kopierter Prompt sowie der deaktivierte Regler auch nach
+  dem Wechsel zwischen beschäftigter und freier Oberfläche.
+
 ## Aktualisierung: Sprachproben-Fortschritt
 
 - Sprachproben zeigen einen Fortschrittsbalken und Prozentwerte für

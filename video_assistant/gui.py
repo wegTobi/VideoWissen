@@ -40,6 +40,7 @@ class Application:
         self.purpose = tk.StringVar(value=PURPOSES[0])
         self.screenshot_role = tk.StringVar(value=SCREENSHOT_ROLES[0])
         self.relevance = tk.DoubleVar(value=70)
+        self.relevance_unknown = tk.BooleanVar(value=False)
         self.relevance_label = tk.StringVar(value="70 % ungefähr relevant")
         self.audience = tk.StringVar(value=PromptPreferences().audience)
         self.copy_status = tk.StringVar()
@@ -63,7 +64,7 @@ class Application:
         self.model.trace_add("write", lambda *_: self._update_model())
         self.device.trace_add("write", lambda *_: self._update_model())
         self.language.trace_add("write", lambda *_: self._runtime())
-        for var in (self.purpose, self.screenshot_role, self.relevance, self.audience):
+        for var in (self.purpose, self.screenshot_role, self.relevance, self.relevance_unknown, self.audience):
             var.trace_add("write", lambda *_: self._refresh_prompt())
         self._refresh_model_labels()
         self._estimate()
@@ -175,14 +176,22 @@ class Application:
         slider_row = ttk.Frame(prompt)
         slider_row.grid(row=2, column=1, sticky="ew", padx=(15, 0))
         slider_row.columnconfigure(1, weight=1)
-        ttk.Label(slider_row, text="0 %").grid(row=0, column=0)
-        slider = ttk.Scale(slider_row, from_=0, to=100, variable=self.relevance,
+        self.relevance_min = ttk.Label(slider_row, text="0 %")
+        self.relevance_min.grid(row=0, column=0)
+        self.relevance_slider = ttk.Scale(slider_row, from_=0, to=100, variable=self.relevance,
                            command=lambda value: self.relevance.set(round(float(value))))
-        slider.grid(row=0, column=1, sticky="ew", padx=8)
-        self.controls.append(slider)
-        ttk.Label(slider_row, text="100 %").grid(row=0, column=2)
-        ttk.Label(prompt, textvariable=self.relevance_label, style="Subtitle.TLabel").grid(
-            row=3, column=1, sticky="w", padx=(15, 0))
+        self.relevance_slider.grid(row=0, column=1, sticky="ew", padx=8)
+        self.controls.append(self.relevance_slider)
+        self.relevance_max = ttk.Label(slider_row, text="100 %")
+        self.relevance_max.grid(row=0, column=2)
+        relevance_row = ttk.Frame(prompt)
+        relevance_row.grid(row=3, column=1, sticky="ew", padx=(15, 0))
+        self.relevance_caption = ttk.Label(relevance_row, textvariable=self.relevance_label, style="Subtitle.TLabel")
+        self.relevance_caption.pack(side="left")
+        self.relevance_checkbox = ttk.Checkbutton(relevance_row, text="Kann ich nicht einschätzen",
+                                                 variable=self.relevance_unknown)
+        self.relevance_checkbox.pack(side="right")
+        self.controls.append(self.relevance_checkbox)
         ttk.Label(prompt, text="Für wen ist die Auswertung?").grid(row=4, column=0, sticky="w", pady=5)
         audience = ttk.Entry(prompt, textvariable=self.audience)
         audience.grid(row=4, column=1, sticky="ew", padx=(15, 0))
@@ -297,7 +306,8 @@ class Application:
 
     def _prompt_text(self):
         return build_prompt(PromptPreferences(self.purpose.get(), self.screenshot_role.get(),
-                            round(self.relevance.get()), self.audience.get(), self.notes.get("1.0", "end-1c")))
+                            None if self.relevance_unknown.get() else round(self.relevance.get()),
+                            self.audience.get(), self.notes.get("1.0", "end-1c")))
 
     def _notes_changed(self, _):
         if self.notes.edit_modified():
@@ -305,7 +315,7 @@ class Application:
             self._refresh_prompt()
 
     def _refresh_prompt(self):
-        self.relevance_label.set(f"{round(self.relevance.get())} % ungefähr relevant")
+        self._update_relevance_state()
         self.copy_status.set("")
         if self.preview and self.preview.winfo_exists():
             try:
@@ -316,6 +326,13 @@ class Application:
             self.preview_text.delete("1.0", "end")
             self.preview_text.insert("1.0", text)
             self.preview_text.configure(state="disabled")
+
+    def _update_relevance_state(self):
+        unknown = self.relevance_unknown.get()
+        self.relevance_label.set("Keine Einschätzung" if unknown else f"{round(self.relevance.get())} % ungefähr relevant")
+        disabled = self.busy or unknown
+        for widget in (self.relevance_slider, self.relevance_min, self.relevance_max, self.relevance_caption):
+            widget.state(["disabled"] if disabled else ["!disabled"])
 
     def _copy_prompt(self):
         try:
@@ -367,6 +384,8 @@ class Application:
         self.abort.configure(state="normal" if value else "disabled")
         self.open_button.configure(state="normal" if self.output and not value else "disabled")
         self._update_model()
+
+        self._update_relevance_state()
 
     def _background(self, operation, kind):
         self.cancel = threading.Event()

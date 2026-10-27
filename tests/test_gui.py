@@ -9,6 +9,34 @@ from video_assistant.prompting import PURPOSES, SCREENSHOT_ROLES
 
 
 class GuiSmokeTest(unittest.TestCase):
+    def test_unknown_relevance_disables_slider_and_omits_percentage_from_prompt(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Application(root)
+        try:
+            root.after_cancel(app.scan_after)
+            app.relevance.set(23)
+            app._show_preview()
+            app.relevance_unknown.set(True)
+            self.assertTrue(app.relevance_slider.instate(["disabled"]))
+            self.assertEqual(app.relevance_label.get(), "Keine Einschätzung")
+            text = app.preview_text.get("1.0", "end-1c")
+            self.assertIn("Es gibt keine Prozentvorgabe", text)
+            self.assertNotIn("%", text)
+            self.assertNotIn("None", text)
+            with patch.object(root, "clipboard_clear"), patch.object(root, "clipboard_append") as append:
+                app._copy_prompt()
+                append.assert_called_once_with(text)
+            app._set_busy(True)
+            app._set_busy(False)
+            self.assertTrue(app.relevance_slider.instate(["disabled"]))
+            app.relevance_unknown.set(False)
+            self.assertTrue(app.relevance_slider.instate(["!disabled"]))
+            self.assertEqual(app.relevance.get(), 23)
+            self.assertIn("23 %", app.preview_text.get("1.0", "end-1c"))
+        finally:
+            root.destroy()
+
     def test_benchmark_shows_percentage_and_keeps_completed_progress(self):
         root = tk.Tk()
         root.withdraw()
